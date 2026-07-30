@@ -51,7 +51,8 @@ Expected on a good start:
 
 Then, in-game:
 
-1. **Options ▸ Controls** - "Dash" appears under Player Control and rebinds.
+1. **Options ▸ Controls ▸ Movement ▸ Player movement** - "Dash" appears at the end of that
+   group (after Jump, Crouch, …) and rebinds.
 2. **Skill tree ▸ Agility ▸ Athletics** - "Rule 2: Double Tap" appears next to Parkour, gated
    at Agility 1.
 3. Buy rank 1, press the key while moving - you dash, stamina drops, cooldown applies.

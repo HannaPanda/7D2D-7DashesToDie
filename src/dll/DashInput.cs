@@ -15,6 +15,11 @@ namespace SevenDashesToDie
     // runtime and groups each action by its PlayerAction.UserData (a
     // PlayerActionData.ActionUserData). It has no hardcoded list, so an action created here
     // shows up in Options > Controls by itself, complete with rebinding.
+    //
+    // GroupPlayerControl and its TabMovement both have priority 0, so the entry lands in the
+    // first group of the first tab, after the vanilla movement keys. Note the labels are not
+    // what the C# names suggest: TabMovement's key is "inpTabPlayerControl" ("Movement") and
+    // GroupPlayerControl's is "inpGrpPlayerControlName" ("Player movement").
     // ---------------------------------------------------------------------------------
     public static class DashInput
     {

@@ -9,7 +9,8 @@ A **dash**, an **air dash** and a **double air dash**, unlocked through a new Ag
 - **Double air dash** at the last rank: two dashes per jump before you touch down again.
 - **Gated behind Agility**, using the same level requirements as vanilla's Agility perks
   (1 / 3 / 5 / 7 / 10). The perk sits next to Parkour under Athletics.
-- **Rebindable key** that shows up in the game's own Controls menu. Default: **V**.
+- **Rebindable key** that shows up in the game's own Controls menu, under
+  **Movement ▸ Player movement** next to Jump and Crouch. Default: **V**.
 - **Configurable in-game** through [Gears](https://www.nexusmods.com/7daystodie/mods/4017):
   force, cooldown, stamina cost, volume, and whether the perk is required at all.
 - Localized into **13 languages** (EN, DE, ES, FR, IT, JA, KO, PL, PT-BR, RU, TR, ZH-Hans,

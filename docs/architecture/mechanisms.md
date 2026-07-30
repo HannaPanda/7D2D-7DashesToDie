@@ -73,6 +73,35 @@ allowRebind, allowMultipleBindings, doNotDisplay, defaultOnStartup
 with the groups and tabs available as statics on `PlayerActionData`
 (`GroupPlayerControl`, `TabMovement`, …).
 
+**Where the entry lands.** From `PlayerActionData..cctor`:
+
+```
+TabMovement        = ActionTab("inpTabPlayerControl", 0)
+GroupPlayerControl = ActionGroup("inpGrpPlayerControlName", null, 0, TabMovement)
+```
+
+Both have priority `0`, so `GroupPlayerControl` is the first group of the first tab - where
+Forward, Jump and Crouch live. Within the group, order is `PlayerActionSet.Actions` order,
+i.e. creation order, so an action added in a postfix appears at the end of the vanilla
+entries.
+
+**⚠ The field names and the label keys are crossed.** `TabMovement`'s key is
+`inpTabPlayerControl` and `GroupPlayerControl`'s key is `inpGrpPlayerControlName`, and the
+strings those resolve to are the other way round again:
+
+| Static | Localization key | Shown as (EN / DE) |
+|---|---|---|
+| `TabMovement` | `inpTabPlayerControl` | **Movement** / Bewegung |
+| `GroupPlayerControl` | `inpGrpPlayerControlName` | **Player movement** / Spielerbewegung |
+
+So the user-facing path is *Options ▸ Controls ▸ **Movement** ▸ **Player movement***. Reading
+it off the C# identifiers gives "Player Control", which is not a label that exists in the UI.
+Resolve the key, do not trust the field name.
+
+`ActionTab` and `ActionGroup` both implement `IComparable<T>`, so a mod *could* define its
+own tab or group and have it sort correctly. Reusing the vanilla statics is simpler and puts
+the dash where a player looks for a movement control.
+
 **Timing.** `PlayerActionsBase.InitActionSet()` calls `CreateActions()` →
 `CreateDefaultKeyboardBindings()` → `CreateDefaultJoystickBindings()`. A postfix on
 `CreateActions` therefore runs when the set exists but nothing has been bound or loaded yet,

@@ -17,7 +17,7 @@ description alone, it has to exist in the mod page's **Images** tab first:
 | Placeholder | What to shoot |
 |---|---|
 | `%%IMG_HERO%%` | The thumbnail people judge the mod by. Mid-air over a gap with a horde behind you, or the moment of separation from a zombie's swing. Motion sells this mod - a static standing shot sells nothing. |
-| `%%IMG_CONTROLS%%` | Options ▸ Controls with "Dash" visible in the Player Control list. This is the proof that it is a real, rebindable key and not a hardcoded hotkey - a question every reader will have. |
+| `%%IMG_CONTROLS%%` | Options ▸ Controls ▸ Movement with "Dash" visible in the Player movement group, ideally with Jump and Crouch in frame so the reader sees it sitting among vanilla controls. This is the proof that it is a real, rebindable key and not a hardcoded hotkey - a question every reader will have. |
 | `%%IMG_SETTINGS%%` | The Gears settings page with all six options visible. |
 
 **A GIF or short video is worth more than all three.** This is a movement mod; the entire
