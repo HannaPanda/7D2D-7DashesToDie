@@ -25,26 +25,21 @@ value proposition is how it feels in motion, and no still frame conveys that. If
 one, put it in the Videos tab - it becomes the page's strongest asset. Best single clip:
 run at a gap, air dash across it, keep going.
 
-## ⚠ Unresolved before the first upload: the dash sound
+## Audio provenance
 
-`SevenDashesToDie/Resources/dash1.wav` arrived as a finished file. Its origin, licence and
-whether it is AI-generated are **not recorded anywhere in this repo**, and both Nexus and the
-description depend on the answer:
+Settled, recorded here so it does not have to be re-derived:
 
-- Nexus asks at upload time whether the mod contains AI-generated assets. The answer has to
-  be truthful, and audio counts.
-- A sample from a commercial pack usually may be redistributed inside a mod, but some
-  licences forbid exactly that. A clip lifted from another game or a video cannot ship at all.
+- `SevenDashesToDie/Resources/dash1.wav` is **ElevenLabs** output (text-to-sound-effect),
+  generated on a **paid plan**, which covers commercial use and redistribution of the
+  generated audio. Attribution to ElevenLabs is a free-tier requirement and does not apply.
+- It is a sound effect, not speech: no voice, no likeness of any person, nothing cloned from
+  a recording. That is the same position as BOOM HEADSHOT's clip, one step simpler.
+- The file ships as delivered - PCM s16le, 48 kHz stereo, 0.48 s - with no re-encode, so
+  there is no generation loss and nothing to reproduce.
 
-Two placeholders wait on it:
-
-| Placeholder | Fill with |
-|---|---|
-| `%%SOUND_CREDIT%%` | The credit line, e.g. "The dash sound was generated with ElevenLabs" or "Dash sound by <author>, <licence>" or "Dash sound recorded by hannapanda". |
-| `%%AI_AUDIO_LINE%%` | Either "No generated art, audio or voice is included." or the honest alternative, e.g. "The dash sound was generated with <tool>." |
-
-Until both are filled, the description is not ready to paste. The same answer belongs in
-`README.md`, which currently carries a note in the AI-generated-content section.
+**Tick the AI-generated-content flag when uploading.** Nexus asks at upload time, audio
+counts, and the description says so anyway - a mismatch between the two is what gets a page
+reported. The description's AI disclosure section carries the same statement.
 
 ## Notes
 
