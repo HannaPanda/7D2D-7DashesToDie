@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.1 - 2026-07-30
+
+Fixes the dash key not appearing anywhere in Options > Controls.
+
+- The action set is built during engine startup, about nineteen seconds before mods load
+  (`InControl` initialises at 0.2 s, `InitMod` runs at 19.4 s), so the postfix on
+  `PlayerActionsLocal.CreateActions` never fired for the set that actually exists. The
+  action is now created lazily on first use instead, which InControl allows: 
+  `CreatePlayerAction` has no initialisation guard, `Actions` is a live wrapper around the
+  backing list, and `LoadData` skips saved names it does not know.
+- Registration now also runs from a prefix on `XUiC_OptionsControls.createControlsEntries`,
+  so the key shows up in the main menu's Controls dialog with no world loaded.
+- No behaviour change to the dash itself.
+
 ## 1.0.0 - 2026-07-30
 
 Initial release for 7 Days to Die V3.0.

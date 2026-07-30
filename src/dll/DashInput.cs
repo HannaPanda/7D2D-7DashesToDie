@@ -7,19 +7,33 @@ namespace SevenDashesToDie
     // ---------------------------------------------------------------------------------
     // Registers a rebindable "Dash" key with the game's own input system.
     //
-    // PlayerActionsBase.InitActionSet() runs CreateActions() -> CreateDefaultKeyboardBindings()
-    // -> CreateDefaultJoystickBindings(), so a postfix on CreateActions is the point where the
-    // set exists but nothing has been bound or loaded yet.
-    //
     // XUiC_OptionsControls.createControlsEntries() enumerates PlayerActionSet.Actions at
     // runtime and groups each action by its PlayerAction.UserData (a
-    // PlayerActionData.ActionUserData). It has no hardcoded list, so an action created here
-    // shows up in Options > Controls by itself, complete with rebinding.
+    // PlayerActionData.ActionUserData). It has no hardcoded list, so an action that exists
+    // in the set shows up in Options > Controls by itself, complete with rebinding.
     //
-    // GroupPlayerControl and its TabMovement both have priority 0, so the entry lands in the
-    // first group of the first tab, after the vanilla movement keys. Note the labels are not
-    // what the C# names suggest: TabMovement's key is "inpTabPlayerControl" ("Movement") and
-    // GroupPlayerControl's is "inpGrpPlayerControlName" ("Player movement").
+    // ⚠ THE ACTION SET IS BUILT BEFORE MODS LOAD, so it cannot be created from a postfix on
+    // CreateActions. Chain: PlayerActionsBase..ctor -> InitActionSet() -> CreateActions(),
+    // and PlayerActionsLocal is constructed by Platform.PlayerInputManager..ctor, which
+    // Factory.CreateInstances runs during engine startup. Measured on this machine:
+    // InControl initialises at 0.2 s, IModApi.InitMod runs at 19.4 s. A postfix there never
+    // fires, which is exactly how v1.0.0 shipped a key that appeared in no tab.
+    //
+    // So the action is created LAZILY instead, the first time anything asks for it. That is
+    // safe against everything InControl does with the set:
+    //   - PlayerActionSet.CreatePlayerAction is just `new PlayerAction(name, this)` - no
+    //     initialisation guard, callable at any point in the set's life.
+    //   - PlayerActionSet.Actions is a ReadOnlyCollection wrapping the live `actions` list,
+    //     assigned once in the constructor, so a late action really does appear in it.
+    //   - PlayerActionSet.LoadData looks each saved name up with
+    //     actionsByName.TryGetValue and skips misses, so saved bindings written before this
+    //     mod existed load fine and our action simply keeps its default.
+    //   - PlayerActionSet.AddPlayerAction THROWS on a duplicate name, hence the lookup
+    //     before creating.
+    //
+    // There is no static route to Platform.PlayerInputManager, so the set is reached through
+    // the two paths that do exist: the local player (in-game) and the options dialog's own
+    // XUi chain (main menu).
     // ---------------------------------------------------------------------------------
     public static class DashInput
     {
@@ -32,12 +46,17 @@ namespace SevenDashesToDie
 
         static PlayerActionsLocal cachedOwner;
         static PlayerAction cachedAction;
+        static PlayerActionsLocal failedOwner;
 
-        /// <summary>The dash action for this input set, or null if it is not registered.</summary>
+        /// <summary>
+        /// The dash action for this input set, created on first sight. Null only if creation
+        /// failed, in which case it is not retried for that set.
+        /// </summary>
         public static PlayerAction Get(PlayerActionsLocal _input)
         {
             if (_input == null) return null;
-            if (ReferenceEquals(_input, cachedOwner)) return cachedAction;
+            if (ReferenceEquals(_input, cachedOwner) && cachedAction != null) return cachedAction;
+            if (ReferenceEquals(_input, failedOwner)) return null;
 
             foreach (PlayerAction a in _input.Actions)
             {
@@ -46,51 +65,95 @@ namespace SevenDashesToDie
                 cachedAction = a;
                 return a;
             }
-            return null;
+
+            PlayerAction created = Register(_input);
+            if (created == null)
+            {
+                failedOwner = _input;
+                return null;
+            }
+            cachedOwner = _input;
+            cachedAction = created;
+            return created;
         }
 
+        static PlayerAction Register(PlayerActionsLocal _input)
+        {
+            try
+            {
+                // CreatePlayerAction is protected on PlayerActionSet.
+                var create = AccessTools.Method(typeof(PlayerActionSet), "CreatePlayerAction",
+                                                new Type[] { typeof(string) });
+                if (create == null)
+                {
+                    Log.Warning(SevenDashesMod.LogPrefix +
+                                "PlayerActionSet.CreatePlayerAction not found - no dash key registered.");
+                    return null;
+                }
+
+                var action = (PlayerAction)create.Invoke(_input, new object[] { ActionName });
+
+                // Argument order matches PlayerActionData.ActionUserData's ctor:
+                // nameKey, descKey, group, appliesToInputType, allowRebind,
+                // allowMultipleBindings, doNotDisplay, defaultOnStartup.
+                //
+                // GroupPlayerControl and its TabMovement both have priority 0, so the entry
+                // lands in the first group of the first tab, after the vanilla movement keys.
+                // The labels are not what the C# names suggest: TabMovement's key is
+                // "inpTabPlayerControl" ("Movement") and GroupPlayerControl's is
+                // "inpGrpPlayerControlName" ("Player movement").
+                action.UserData = new PlayerActionData.ActionUserData(
+                    "inpActSevenDashesDashName",
+                    "inpActSevenDashesDashDesc",
+                    PlayerActionData.GroupPlayerControl,
+                    PlayerActionData.EAppliesToInputType.Both,
+                    true,   // allowRebind
+                    false,  // allowMultipleBindings
+                    false,  // doNotDisplay
+                    true);  // defaultOnStartup
+
+                action.AddDefaultBinding(new Key[] { DefaultKey });
+
+                Log.Out(SevenDashesMod.LogPrefix + "dash key registered (default " + DefaultKey +
+                        ") in action set '" + _input.Name + "'");
+                return action;
+            }
+            catch (Exception e)
+            {
+                Log.Error(SevenDashesMod.LogPrefix + "failed to register the dash key: " + e);
+                return null;
+            }
+        }
+
+        // The main-menu path: Options > Controls is reachable without a loaded world, so the
+        // local player cannot be relied on to have registered the action yet.
+        [HarmonyPatch(typeof(XUiC_OptionsControls), "createControlsEntries")]
+        static class Patch_XUiC_OptionsControls_createControlsEntries
+        {
+            static void Prefix(XUiC_OptionsControls __instance)
+            {
+                try
+                {
+                    if (__instance == null || __instance.xui == null) return;
+                    LocalPlayerUI ui = __instance.xui.playerUI;
+                    if (ui == null) return;
+                    Get(ui.playerInput);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(SevenDashesMod.LogPrefix + "controls dialog hook failed: " + e);
+                }
+            }
+        }
+
+        // Covers an action set that is built after the mod loaded (a second local player, a
+        // set recreated on relog). A no-op for the set that already exists at that point.
         [HarmonyPatch(typeof(PlayerActionsLocal), "CreateActions")]
         static class Patch_PlayerActionsLocal_CreateActions
         {
             static void Postfix(PlayerActionsLocal __instance)
             {
-                try
-                {
-                    // CreatePlayerAction is protected on PlayerActionSet.
-                    var create = AccessTools.Method(typeof(PlayerActionSet), "CreatePlayerAction",
-                                                    new Type[] { typeof(string) });
-                    if (create == null)
-                    {
-                        Log.Warning(SevenDashesMod.LogPrefix +
-                                    "PlayerActionSet.CreatePlayerAction not found - no dash key registered.");
-                        return;
-                    }
-
-                    var action = (PlayerAction)create.Invoke(__instance, new object[] { ActionName });
-
-                    // Argument order matches PlayerActionData.ActionUserData's ctor:
-                    // nameKey, descKey, group, appliesToInputType, allowRebind,
-                    // allowMultipleBindings, doNotDisplay, defaultOnStartup.
-                    action.UserData = new PlayerActionData.ActionUserData(
-                        "inpActSevenDashesDashName",
-                        "inpActSevenDashesDashDesc",
-                        PlayerActionData.GroupPlayerControl,
-                        PlayerActionData.EAppliesToInputType.Both,
-                        true,   // allowRebind
-                        false,  // allowMultipleBindings
-                        false,  // doNotDisplay
-                        true);  // defaultOnStartup
-
-                    action.AddDefaultBinding(new Key[] { DefaultKey });
-
-                    cachedOwner = __instance;
-                    cachedAction = action;
-                    Log.Out(SevenDashesMod.LogPrefix + "dash key registered (default " + DefaultKey + ")");
-                }
-                catch (Exception e)
-                {
-                    Log.Error(SevenDashesMod.LogPrefix + "failed to register the dash key: " + e);
-                }
+                Get(__instance);
             }
         }
     }

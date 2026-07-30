@@ -102,10 +102,43 @@ Resolve the key, do not trust the field name.
 own tab or group and have it sort correctly. Reusing the vanilla statics is simpler and puts
 the dash where a player looks for a movement control.
 
-**Timing.** `PlayerActionsBase.InitActionSet()` calls `CreateActions()` →
-`CreateDefaultKeyboardBindings()` → `CreateDefaultJoystickBindings()`. A postfix on
-`CreateActions` therefore runs when the set exists but nothing has been bound or loaded yet,
-which is where the new action belongs.
+**⚠ Timing - this is what broke v1.0.0.** `PlayerActionsBase..ctor` calls `InitActionSet()`,
+which runs `CreateActions()` → `CreateDefaultKeyboardBindings()` →
+`CreateDefaultJoystickBindings()`. `PlayerActionsLocal` itself is constructed by
+`Platform.PlayerInputManager..ctor`, which `Factory.CreateInstances` runs during engine
+startup. Measured on this machine:
+
+| | Time |
+|---|---|
+| `INF InControl (version 1.8.9 …)` | **0.2 s** |
+| `INF [MODS] Initializing mod SevenDashesToDie` → `InitMod` | **19.4 s** |
+
+So the action set is fully built roughly nineteen seconds before any mod can patch anything.
+A postfix on `CreateActions` never fires for the set that actually exists, and the symptom is
+a key that appears in no tab, with no error anywhere in the log - the patch is applied, it
+just has nothing left to intercept.
+
+**The fix: create the action lazily**, the first time anything asks for it. Everything
+InControl does with a set tolerates that:
+
+| Method | Behaviour |
+|---|---|
+| `CreatePlayerAction` | Body is exactly `new PlayerAction(name, this)` - no initialisation guard, callable at any point. |
+| `Actions` | A `ReadOnlyCollection` wrapping the live `actions` list, assigned once in the ctor, so a late action does appear in it. |
+| `LoadData` | Looks each saved name up via `actionsByName.TryGetValue` and skips misses, so bindings saved before this mod existed load fine and the new action keeps its default. |
+| `AddPlayerAction` | **Throws `InControlException` on a duplicate name** - so look the action up before creating it. |
+
+There is no static route to `Platform.PlayerInputManager` (checked: no static field or method
+anywhere in `Assembly-CSharp` returns one), so the set is reached through the two paths that
+do exist:
+
+- **In-game** - `EntityPlayerLocal.playerInput`, from the per-frame tick.
+- **Main menu** - a prefix on `XUiC_OptionsControls.createControlsEntries`, via
+  `__instance.xui.playerUI.playerInput` (all three accessors public). Needed because Options ▸
+  Controls is reachable with no world loaded, so the player cannot be relied on.
+
+The `CreateActions` postfix is kept as well, for a set genuinely built after mod load (a
+second local player, a set recreated on relog). For the startup set it is simply a no-op.
 
 **Access.** `PlayerActionSet.CreatePlayerAction(string)` is `protected` (InControl), so it is
 invoked through `AccessTools`. `PlayerAction.AddDefaultBinding(Key[])` is public.
