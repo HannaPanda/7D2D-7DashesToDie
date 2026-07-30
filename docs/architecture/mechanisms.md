@@ -1,0 +1,125 @@
+# Mechanisms
+
+Four things in this mod are not obvious from the outside. Each is recorded here with the
+evidence it was derived from - all of it read out of the installed `Assembly-CSharp.dll`
+(3.0.1) with Mono.Cecil, none of it from memory.
+
+| File | Mechanism |
+|---|---|
+| `src/dll/Dash.cs` | The impulse, the charge/cooldown state machine, the guards |
+| `src/dll/DashInput.cs` | Registering a rebindable key with the vanilla Controls menu |
+| `src/dll/SevenDashesMod.cs` | Entry point and the Gears-by-reflection bridge |
+| `SevenDashesToDie/Config/progression.xml` | The perk and its Agility gate |
+
+---
+
+## 1. The impulse goes through `vp_FPController`, not through `Entity.motion`
+
+**The trap:** `Entity.motion` is public, `Entity.AddVelocity`/`SetVelocity` are public
+virtual, and vanilla even has a precedent - `BlockJumpPad.OnEntityWalking`'s entire body is
+`entity.motion.y = 3f`. It looks like the obvious lever. For the **local player** it is the
+wrong one.
+
+`EntityPlayerLocal.MoveEntityHeaded` resolves `get_vp_FPController()` at the top and
+branches through the controller. The `Entity.motion` arithmetic further down the same method
+- the clamp to ±0.11 followed by `motion *= 0.545` - sits in the **ladder** branch
+(`isLadderAttached`, and it is followed by `distanceClimbed`), not in the normal
+ground/air path.
+
+Likewise, `EntityAlive.DefaultMoveEntity` damps x/z by `0.91` per tick, but its only caller
+is `EntityAlive.MoveEntityHeaded`, which `EntityPlayerLocal` **overrides**. That constant
+governs NPCs, not the player.
+
+**What the controller offers instead** (all public):
+
+| Member | Use here |
+|---|---|
+| `AddSoftForce(Vector3 force, float frames)` | The dash. Spreads one impulse over N frames. |
+| `ScaleFallSpeed(float)` | Air dash: `0f` cancels the accumulated fall for a flat glide. |
+| `Grounded` | When to refill air charges. |
+| `MotorJumpForce` | Calibration reference for the dash force. |
+
+`AddSoftForce` semantics, from its IL: it divides `force` by `Time.timeScale`, clamps
+`frames` to 1..120, applies `force / frames` immediately via `AddForceInternal`, and queues
+`force / frames` into each of `frames` entries of `m_SmoothForceFrame`. So the **`force`
+argument is the total impulse**, not a per-frame value.
+
+Because the controller performs the actual movement, its own collision sweep applies. A raw
+`motion` write would bypass it and could push the player through thin geometry at dash
+speed.
+
+**Calibration.** The dash force is `MotorJumpForce * BaseForceFactor * rankMultiplier *
+forceSetting`. Deriving it from the jump keeps it in whatever force units the engine
+currently uses, instead of hardcoding a number that a retune would silently invalidate.
+`BaseForceFactor = 2.2` is a starting estimate, not a measured value - the `DebugLog`
+switch exists to replace it with a measured one.
+
+## 2. A mod can add a key to the vanilla Controls menu
+
+`XUiC_OptionsControls.createControlsEntries` builds its list at runtime: it walks the five
+action sets (`PlayerActionsLocal`, `Vehicle`, `Permanent`, `GUI`, `PlayerActionsGlobal`),
+iterates `PlayerActionSet.Actions`, and casts each action's `UserData` to
+`PlayerActionData.ActionUserData`, skipping anything with `doNotDisplay` or
+`appliesToInputType == None`. There is no hardcoded list of actions anywhere in that method.
+
+So creating an action is enough to make it appear, rebinding included. `ActionUserData`'s
+constructor takes, in order:
+
+```
+actionNameKey, actionDescKey, actionGroup, appliesToInputType,
+allowRebind, allowMultipleBindings, doNotDisplay, defaultOnStartup
+```
+
+with the groups and tabs available as statics on `PlayerActionData`
+(`GroupPlayerControl`, `TabMovement`, …).
+
+**Timing.** `PlayerActionsBase.InitActionSet()` calls `CreateActions()` →
+`CreateDefaultKeyboardBindings()` → `CreateDefaultJoystickBindings()`. A postfix on
+`CreateActions` therefore runs when the set exists but nothing has been bound or loaded yet,
+which is where the new action belongs.
+
+**Access.** `PlayerActionSet.CreatePlayerAction(string)` is `protected` (InControl), so it is
+invoked through `AccessTools`. `PlayerAction.AddDefaultBinding(Key[])` is public.
+
+**Default key.** `V`. Extracted the key constants out of
+`PlayerActionsLocal.CreateDefaultKeyboardBindings` and checked `V` (`InControl.Key.V` = 57)
+against them; it is unbound in that set.
+
+**Caveat:** InControl serialises bindings by action name, so changing
+`DashInput.ActionName` resets every user's key.
+
+## 3. The perk carries no passive effect, by necessity
+
+`PassiveEffects` is a plain engine enum running `None = 0` … `HeadshotDamageModifier = 202`,
+`Count = 203`. A mod cannot add a value to it, so there is no way to express "dash distance"
+as a `<passive_effect>`. There is also no `MinEventAction` for velocity - the full catalog is
+72 types and none of them touch movement impulse - which is why this mod needs a DLL at all
+and cannot be pure XML.
+
+The perk is therefore a pure gate: `progression.xml` defines it with the vanilla Agility
+`level_requirements` (1/3/5/7/10, mirroring `perkArchery`) and nothing but
+`effect_description` entries in its `effect_group`. The DLL reads the rank with
+`player.Progression.GetProgressionValue("perkRuleTwoDoubleTap").Level` and maps it to force,
+cooldown and air charges itself.
+
+The perk is appended to `/progression/perks` (perks live in that container, lines 875-4872 of
+vanilla `progression.xml`, not directly under `/progression`).
+
+## 4. Guards
+
+A dash is refused when any of these hold. Each was picked because it is a state where an
+impulse would be wrong or would fight the engine:
+
+| Check | Why |
+|---|---|
+| `IsDead()` / `!IsAlive()` | Obvious. |
+| `AttachedToEntity != null` | In a vehicle or turret; the player is not driving movement. |
+| `isLadderAttached` | The ladder branch owns `motion`; an impulse there fights it. |
+| `IsSwimming()` | Swimming has its own motion handling. |
+| `IsFlyMode.Value` | Creative flight; a dash is meaningless. |
+| `!fpc.enabled` | The controller is not driving the player right now. |
+| `windowManager.IsInputActive()` | A UI window has input; the keypress is not for us. |
+
+State (`airCharges`, `nextDashTime`, `wasGrounded`) is tied to the `EntityPlayerLocal`
+instance it belongs to and reset when the instance changes, because the local player is
+recreated on respawn and relog.

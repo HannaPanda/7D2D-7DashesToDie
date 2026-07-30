@@ -1,0 +1,18 @@
+# .NET build output (DLL source)
+[Bb]in/
+[Oo]bj/
+out/
+*.user
+
+# Backups / temp
+*.dll.bak
+*.bak
+*.tmp
+
+# Release artifacts (built by CI)
+dist/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  7 Dashes to Die - the perk that gates the ability.
+
+  The perk carries no passive_effect: PassiveEffects is a fixed engine enum (0..202,
+  Count = 203), so a mod cannot add one of its own. The DLL reads the rank directly via
+  Progression.GetProgressionValue("perkRuleTwoDoubleTap").Level instead.
+
+  Agility requirements mirror vanilla's Agility perks (levels 1/3/5/7/10), and the parent
+  skill is the same one Parkour lives under.
+-->
+<configs>
+
+	<append xpath="/progression/perks">
+
+		<perk name="perkRuleTwoDoubleTap" parent="skillAgilityAthletics"
+		      name_key="perkRuleTwoDoubleTapName" desc_key="perkRuleTwoDoubleTapDesc"
+		      icon="ui_game_symbol_run">
+			<level_requirements level="1"><requirement name="ProgressionLevel" progression_name="attAgility" operation="GTE" value="1" desc_key="reqAgilityLevel01"/></level_requirements>
+			<level_requirements level="2"><requirement name="ProgressionLevel" progression_name="attAgility" operation="GTE" value="3" desc_key="reqAgilityLevel03"/></level_requirements>
+			<level_requirements level="3"><requirement name="ProgressionLevel" progression_name="attAgility" operation="GTE" value="5" desc_key="reqAgilityLevel05"/></level_requirements>
+			<level_requirements level="4"><requirement name="ProgressionLevel" progression_name="attAgility" operation="GTE" value="7" desc_key="reqAgilityLevel07"/></level_requirements>
+			<level_requirements level="5"><requirement name="ProgressionLevel" progression_name="attAgility" operation="GTE" value="10" desc_key="reqAgilityLevel10"/></level_requirements>
+
+			<effect_group>
+				<effect_description level="1" desc_key="perkRuleTwoDoubleTapRank1Desc" long_desc_key="perkRuleTwoDoubleTapRank1LongDesc"/>
+				<effect_description level="2" desc_key="perkRuleTwoDoubleTapRank2Desc" long_desc_key="perkRuleTwoDoubleTapRank2LongDesc"/>
+				<effect_description level="3" desc_key="perkRuleTwoDoubleTapRank3Desc" long_desc_key="perkRuleTwoDoubleTapRank3LongDesc"/>
+				<effect_description level="4" desc_key="perkRuleTwoDoubleTapRank4Desc" long_desc_key="perkRuleTwoDoubleTapRank4LongDesc"/>
+				<effect_description level="5" desc_key="perkRuleTwoDoubleTapRank5Desc" long_desc_key="perkRuleTwoDoubleTapRank5LongDesc"/>
+			</effect_group>
+		</perk>
+
+	</append>
+
+</configs>

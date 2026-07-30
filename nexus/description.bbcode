@@ -1,0 +1,97 @@
+[center][size=6][b][color=#4fc3f7]7   D A S H E S   T O   D I E[/color][/b][/size]
+[size=4][i]Rule 1 was cardio. Rule 2 is not standing still.[/i][/size]
+
+[img]%%IMG_HERO%%[/img][/center]
+
+A horde rounds the corner. Normally that is the moment you find out how far the nearest doorway is. With this mod it is the moment you tap a key and are somewhere else.
+
+[b]7 Dashes to Die[/b] adds a [b]dash[/b], an [b]air dash[/b] and a [b]double air dash[/b] - earned, not given. They live behind a new Agility perk that sits right next to Parkour: [b]Rule 2: Double Tap[/b].
+
+[center][color=#4fc3f7]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/color][/center]
+
+[size=5][b][color=#4fc3f7]What it does[/color][/b][/size]
+[list]
+[*][b]Dash[/b] - a burst of speed in the direction you are moving. No input means straight ahead.
+[*][b]Air dash[/b] - cancels your fall, so it carries you [i]flat[/i] across a gap instead of down into it.
+[*][b]Double air dash[/b] - two dashes per jump at the last rank, recharging the moment you land.
+[*][b]Costs stamina[/b] and has a cooldown. This is a tool, not a flight mode.
+[/list]
+
+[size=5][b][color=#4fc3f7]It is a real perk, in the real skill tree[/color][/b][/size]
+No console command, no free ability at level one. [b]Rule 2: Double Tap[/b] sits under [i]Agility ▸ Athletics[/i] and uses the same Agility requirements as every vanilla Agility perk.
+
+[list=1]
+[*][b]Rank 1[/b] (Agility 1) - unlocks the ground dash.
+[*][b]Rank 2[/b] (Agility 3) - stronger dash, shorter cooldown.
+[*][b]Rank 3[/b] (Agility 5) - [b]unlocks the air dash[/b].
+[*][b]Rank 4[/b] (Agility 7) - stronger dash, shorter cooldown.
+[*][b]Rank 5[/b] (Agility 10) - [b]unlocks the double air dash[/b].
+[/list]
+
+[quote]Not an Agility build this run? Turn [b]Require perk[/b] off in the settings and you get the full ability without spending a point.[/quote]
+
+[size=5][b][color=#4fc3f7]Your key, your binding[/color][/b][/size]
+The dash key is registered with the game's own input system, so it shows up in [i]Options ▸ Controls ▸ Player Control[/i] like any vanilla control, and you rebind it there. Default is [b]V[/b]. Controller bindings work too.
+
+[center][img]%%IMG_CONTROLS%%[/img][/center]
+
+[size=5][b][color=#4fc3f7]Configurable in game[/color][/b][/size]
+With [url=https://www.nexusmods.com/7daystodie/mods/4017][b]Gears[/b][/url] installed you get a settings page under [i]Mods ▸ 7 Dashes to Die[/i], reachable from the main menu or the ESC menu:
+[list]
+[*][b]Enabled[/b] - on or off.
+[*][b]Require perk[/b] - off gives you the full ability without spending skill points.
+[*][b]Force[/b] - 25 to 300%. How far a dash carries you.
+[*][b]Cooldown[/b] - 0.2 to 10 seconds. Higher perk ranks shorten it further.
+[*][b]Stamina cost[/b] - 0 to 50. Set it to 0 for a free dash.
+[*][b]Volume[/b] - 0 to 100%, on top of your normal game volume.
+[/list]
+Settings are read on every dash, so a slider you move now takes effect on the next one. [b]No restart, no new save.[/b]
+
+[quote]Gears is [b]optional[/b]. Without it the mod runs on its built-in defaults. Nothing breaks, nothing errors, you just do not get the menu.[/quote]
+
+[center][img]%%IMG_SETTINGS%%[/img][/center]
+
+[center][color=#4fc3f7]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/color][/center]
+
+[size=5][b][color=#4fc3f7]Requirements[/color][/b][/size]
+[list]
+[*][b]EasyAntiCheat must be off.[/b] This mod ships a Harmony DLL. Single-player and private servers.
+[*][url=https://www.nexusmods.com/7daystodie/mods/4017][b]Gears[/b][/url] - [b]optional[/b], only for the settings menu. Gears itself needs Quartz.
+[*][b]Multiplayer:[/b] install it on the client for the ability, and on the server as well so the perk exists in the skill tree.
+[/list]
+
+[size=5][b][color=#4fc3f7]Installation[/color][/b][/size]
+[list=1]
+[*]Install the zip with Vortex or MO2, or extract the [i]SevenDashesToDie[/i] folder into [i]7 Days To Die/Mods/[/i].
+[*]Launch with EAC disabled.
+[*]Spend a point on [i]Agility ▸ Athletics ▸ Rule 2: Double Tap[/i].
+[/list]
+
+[size=5][b][color=#4fc3f7]Adding and removing mid-save[/color][/b][/size]
+Adding it mid-save is fine. [b]Removing it is safe too[/b], with one caveat worth knowing: the perk disappears from the skill tree, and any points you spent on it are gone with it. That is how 7 Days to Die handles a removed perk, not something this mod can prevent. Nothing else is touched - no blocks, no items, no recipes, no entities.
+
+[size=5][b][color=#4fc3f7]Performance[/color][/b][/size]
+One Harmony postfix on the local player's update, which reads a key state and returns. The dash itself hands a single impulse to the movement controller the game already runs. No new objects, no polling, no extra physics.
+
+[size=5][b][color=#4fc3f7]Honest notes[/color][/b][/size]
+[list]
+[*][b]There is no dash animation.[/b] The game has no such move in its rig, and a mod cannot add one. In first person you will not notice; other players see you glide rather than plant a foot.
+[*][b]Multiplayer replication is positional.[/b] 7 Days to Die sends positions, not impulses, so on a laggy connection your dash looks snappier to you than to everyone else.
+[*][b]Localized into 13 languages[/b] - EN, DE, ES, FR, IT, JA, KO, PL, PT-BR, RU, TR, ZH-Hans, ZH-Hant.
+[/list]
+
+[center][color=#4fc3f7]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/color][/center]
+
+[size=5][b][color=#4fc3f7]Credits[/color][/b][/size]
+[list]
+[*][b]Rule 2: Double Tap[/b] is from [i]Zombieland[/i] (2009). The game already ships Rule 1: Cardio, so it seemed rude to leave the list unfinished.
+[*][b]Harmony[/b] by Andreas Pardeike.
+[*][url=https://www.nexusmods.com/7daystodie/mods/4017][b]Gears[/b][/url] by Laydor.
+[*]The dash sound is the game's own [i]swoosh[/i]. No new audio ships with this mod.
+[/list]
+
+[size=5][b][color=#4fc3f7]AI disclosure[/color][/b][/size]
+Code, configuration and the translations were written with the help of Anthropic's Claude and reviewed before release. No generated art, audio or voice is included.
+
+[size=5][b][color=#4fc3f7]Source[/color][/b][/size]
+MIT licensed, source on [url=https://github.com/HannaPanda/7D2D-7DashesToDie][b]GitHub[/b][/url].

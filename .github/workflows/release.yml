@@ -1,0 +1,171 @@
+name: Release
+
+# Push a version tag (e.g. v1.0.1) to build the MO2/Vortex-installable zip
+# and publish it as a GitHub Release.
+#
+# Note: the workflow only PACKAGES the committed mod folder. It cannot compile
+# SevenDashesToDie.dll (that needs the game's Assembly-CSharp.dll as a reference), so the
+# DLL must stay committed in the repo. Text config is validated for well-formedness before
+# release.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate XML
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxml2-utils
+          find SevenDashesToDie -name '*.xml' -print0 \
+            | xargs -0 -I{} xmllint --noout "{}"
+          echo "All XML well-formed."
+
+      - name: Validate localization CSV
+        run: |
+          python3 - <<'PY'
+          import csv, sys
+          path = "SevenDashesToDie/Config/Localization.csv"
+          rows = list(csv.reader(open(path, encoding="utf-8")))
+          width = len(rows[0])
+          ragged = [r[0] for r in rows if len(r) != width]
+          if ragged:
+              sys.exit(f"ragged rows in {path}: {ragged}")
+          if rows[0][0] != "Key" or "english" not in rows[0]:
+              sys.exit(f"unexpected header in {path}: {rows[0]}")
+          print(f"{path}: {len(rows)-1} keys x {width} columns, all rows aligned.")
+          PY
+
+      - name: Sanity-check installable structure
+        run: |
+          test -f SevenDashesToDie/ModInfo.xml
+          test -f SevenDashesToDie/ModSettings.xml
+          test -f SevenDashesToDie/SevenDashesToDie.dll
+          test -f SevenDashesToDie/Config/progression.xml
+          test -f SevenDashesToDie/Config/Localization.csv
+          # the DLL must be a real assembly, not a truncated/LFS-stub file
+          test "$(head -c 2 SevenDashesToDie/SevenDashesToDie.dll)" = "MZ"
+          # localization is loaded ONLY from Localization.csv; a .txt would be dead weight
+          ! find SevenDashesToDie -name 'Localization.txt' | grep -q .
+          # meta.ini is MO2-internal and must never ship inside a release zip
+          ! find SevenDashesToDie -name 'meta.ini' | grep -q .
+          echo "Structure OK."
+
+      - name: Package mod
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          mkdir -p dist
+          # zip from repo root so the mod folder (with ModInfo.xml) is the zip root,
+          # which is what MO2 and Vortex's 7D2D installer expect.
+          zip -r -X "dist/SevenDashesToDie-${TAG}.zip" SevenDashesToDie
+          echo "--- zip contents ---"
+          unzip -l "dist/SevenDashesToDie-${TAG}.zip"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true
+          body: |
+            7 Days to Die V3.0. A dash, an air dash and a double air dash, unlocked through
+            the Agility perk **Rule 2: Double Tap**. Default key **V**, rebindable in the
+            game's own Controls menu.
+
+            - Requires EasyAntiCheat **off** (Harmony DLL).
+            - [Gears](https://www.nexusmods.com/7daystodie/mods/4017) is **optional**: with it
+              you get in-game settings for force, cooldown, stamina cost and volume; without
+              it the mod runs on its built-in defaults.
+            - Multiplayer: install on the client for the ability, and on the server so the
+              perk exists in the skill tree.
+
+            Installable with MO2 or Vortex (drop the zip in, or extract into `Mods/`).
+
+      # ---- Nexus Mods upload ------------------------------------------------
+      # Setup (repo Settings -> Secrets and variables -> Actions):
+      #   Secret    NEXUSMODS_API_KEY   personal API key
+      #   Variable  NEXUSMODS_FILE_ID   Files tab -> "API Info" on the mod page
+      #
+      # The v3 Upload API can only add a VERSION to a file entry that already exists;
+      # its OpenAPI schema has no endpoint that creates a mod page. So the mod page and
+      # the file entry must be created by hand on the website once; every tag after that
+      # updates them automatically.
+      #
+      # The step is skipped while the variable is unset, so tagging works before the mod
+      # page exists. Setting/clearing the variable is the on/off switch for auto-publish.
+      - name: Derive Nexus version
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build mini changelog
+        id: notes
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, re, textwrap
+          version = os.environ["GITHUB_REF_NAME"].lstrip("v")
+          blurb = ("A dash, an air dash and a double air dash for 7 Days to Die V3.0, "
+                   "unlocked through the Agility perk Rule 2: Double Tap. Default key V, "
+                   "rebindable in the game's own Controls menu. Requires EasyAntiCheat off. "
+                   "Gears is optional and adds in-game settings for force, cooldown, stamina "
+                   "cost and volume.")
+          bullets = []
+          try:
+              text = open("CHANGELOG.md", encoding="utf-8").read()
+              m = re.search(rf"^## {re.escape(version)}\b.*?$(.*?)(?=^## |\Z)",
+                            text, re.M | re.S)
+              if m:
+                  section = m.group(1)
+                  # Fold continuation lines. The bullet test needs the whitespace after the
+                  # marker: without it a wrapped line starting with bold (**Rule 2**) looks
+                  # like a new bullet and the fold silently splits it in two.
+                  raw = re.sub(r"\n(?!\s*[-*]\s)", " ", section)
+                  for line in raw.splitlines():
+                      line = line.strip()
+                      if not line.startswith(("-", "*")):
+                          continue
+                      line = re.sub(r"^[-*]\s+", "", line)
+                      # Strip markdown emphasis but NOT underscores: identifiers like
+                      # vp_FPController and passive_effect appear in these bullets.
+                      line = re.sub(r"[`*]", "", line)
+                      line = re.sub(r"\s+", " ", line).strip()
+                      if len(line) > 180:
+                          cut = line[:180].rfind(". ")
+                          line = line[:cut + 1] if cut > 40 else line[:180].rstrip() + "..."
+                      bullets.append("- " + line)
+                      if len(bullets) == 6:
+                          break
+          except FileNotFoundError:
+              pass
+          body = blurb
+          if bullets:
+              body += "\n\nWhat's new in " + version + ":\n" + "\n".join(bullets)
+          body += ("\n\nFull changelog: " + os.environ["GITHUB_SERVER_URL"] + "/"
+                   + os.environ["GITHUB_REPOSITORY"] + "/blob/main/CHANGELOG.md")
+          print("description<<EOF")
+          print(body)
+          print("EOF")
+          PY
+
+      - name: Upload to Nexus Mods
+        if: ${{ vars.NEXUSMODS_FILE_ID != '' }}
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.9
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ vars.NEXUSMODS_FILE_ID }}
+          filename: dist/SevenDashesToDie-${{ github.ref_name }}.zip
+          display_name: 7 Dashes to Die ${{ steps.ver.outputs.version }}
+          version: ${{ steps.ver.outputs.version }}
+          category: main
+          # Moves the previous version into the archive instead of leaving it listed.
+          archive_existing_version: true
+          update_mod_version: true
+          description: ${{ steps.notes.outputs.description }}

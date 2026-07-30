@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModSettings>
+  <Global>
+    <Tab name="SevenDashes" displayKey="uiSevenDashesTab" tooltipKey="tipSevenDashesTab">
+      <Category name="Dash" displayKey="uiSevenDashesCategory" tooltipKey="tipSevenDashesCategory">
+        <Switch name="Enabled" displayKey="uiSevenDashesEnabled" tooltipKey="tipSevenDashesEnabled" defaultValue="True" leftValue="False" rightValue="True" />
+        <Switch name="RequirePerk" displayKey="uiSevenDashesRequirePerk" tooltipKey="tipSevenDashesRequirePerk" defaultValue="True" leftValue="False" rightValue="True" />
+        <Slider name="Force" displayKey="uiSevenDashesForce" tooltipKey="tipSevenDashesForce" defaultValue="100">
+          <Property increment="5" minValue="25" maxValue="300" type="incrementalValuesInt" />
+        </Slider>
+        <Slider name="Cooldown" displayKey="uiSevenDashesCooldown" tooltipKey="tipSevenDashesCooldown" defaultValue="1.5">
+          <Property increment="0.1" minValue="0.2" maxValue="10" type="incrementalValuesFloat" />
+        </Slider>
+        <Slider name="StaminaCost" displayKey="uiSevenDashesStamina" tooltipKey="tipSevenDashesStamina" defaultValue="10">
+          <Property increment="1" minValue="0" maxValue="50" type="incrementalValuesInt" />
+        </Slider>
+        <Slider name="Volume" displayKey="uiSevenDashesVolume" tooltipKey="tipSevenDashesVolume" defaultValue="100">
+          <Property increment="5" minValue="0" maxValue="100" type="incrementalValuesInt" />
+        </Slider>
+        <Switch name="DebugLog" displayKey="uiSevenDashesDebug" tooltipKey="tipSevenDashesDebug" defaultValue="False" leftValue="False" rightValue="True" />
+      </Category>
+    </Tab>
+  </Global>
+  <World />
+</ModSettings>
