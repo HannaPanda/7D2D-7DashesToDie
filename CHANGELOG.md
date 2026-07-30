@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.4 - 2026-07-31
+
+Play-tested tuning pass. First release whose numbers come from measurement rather than estimate.
+
+- **The dash is now about a quarter as strong.** `BaseForceFactor` 2.2 -> 0.88. The old
+  value carried ~25 m from a standstill in 0.8 s - a whole street. Dialling the in-game
+  Force slider found 33% short and 40% right, so that setting is now the default and the
+  slider reads 100% again. Expect roughly 10 m on the flat.
+- **`SpeedPerImpulse` corrected by x1.74**, from 15 logged dashes (median 1.74, min 1.43,
+  max 2.09, sigma 0.16). The analytic model under-predicted peak speed; the measurement is
+  the credible side, since ~34 m/s could not have produced the 25 m actually covered.
+- Consequence worth knowing: the correction makes Momentum Lite **less** aggressive, because
+  a correctly-sized dash speed makes the sprint term relatively smaller. At ~10 m/s entry the
+  reduction moves from ~53% to ~30%. If sprint dashes now feel long, `MomentumShare` is the
+  knob, not the force.
+- Momentum Lite also matters more at this force than it did at the old one: the dash is now
+  ~2x sprint speed instead of ~5x, which is the range the mechanic was designed for.
+- The 1.2x momentum cap is confirmed dead weight - it needs ~29 m/s of entry speed and the
+  measured maximum was 12.1. Left in as a ceiling for modded movement speeds.
+- Anyone who liked the old strength: set the Force slider to **250%**.
+
 ## 1.0.3 - 2026-07-30
 
 "Momentum Lite": a sprint dash is no longer a plain speed multiplier.

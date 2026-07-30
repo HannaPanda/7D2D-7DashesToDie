@@ -21,10 +21,10 @@ a keybind:
 
 ## Status
 
-**Not play-tested yet.** The DLL compiles clean against the real `Assembly-CSharp.dll` and
-every API claim in `docs/` was read out of that DLL, but no in-game run has confirmed
-behaviour. Treat `BaseForceFactor` in `src/dll/Dash.cs` as an estimate until the `DebugLog`
-switch has produced a measured distance.
+Play-tested on 7DTD 3.0.1 as of 1.0.4. `BaseForceFactor` (0.88, ~10 m per dash) and
+`ModelCorrection` (1.74) are both **measured** values from logged runs, not estimates -
+treat them as data and re-measure rather than re-guess. Every API claim in `docs/` was read
+out of the installed `Assembly-CSharp.dll`.
 
 ## Repository layout
 

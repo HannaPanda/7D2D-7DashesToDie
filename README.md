@@ -18,10 +18,8 @@ A **dash**, an **air dash** and a **double air dash**, unlocked through a new Ag
 
 ## Status
 
-**Not yet play-tested.** Everything here was written against the installed
-`Assembly-CSharp.dll` (3.0.1) and compiles clean, but no in-game run has confirmed the
-feel of the dash yet. The one number that needs tuning by hand is the force - see
-[Tuning](#tuning).
+Play-tested and tuned on 7DTD 3.0.1. A dash carries roughly **10 m on the flat** at the
+default force; the Force slider spans about 6 m to 76 m if you want it shorter or sillier.
 
 ## Requirements
 
@@ -73,17 +71,23 @@ Values are read fresh on every dash, so moving a slider takes effect on the next
 ## Tuning
 
 The dash impulse is derived from the controller's own `MotorJumpForce`, not from a
-hardcoded speed, so it stays in the engine's units. The remaining unknown is the
-multiplier, which starts at `2.2` (rank 1).
+hardcoded speed, so it stays in the engine's units. The multiplier on top is
+`BaseForceFactor = 0.88` (rank 1).
 
 Turn on **Log dash distance** and dash a few times. Each dash writes a line like:
 
 ```
-[7 Dashes to Die] dash rank 1 (ground): force 0.396, travelled 4.83 m in 0.8 s, air charges left 0
+[7 Dashes to Die] dash rank 3 (ground): entry speed 5.1 m/s, force 0.289, predicted 24.8 -> measured 25.4 m/s (model x1.02), travelled 10.31 m in 0.8 s, air charges left 1
 ```
 
 Set **Force (%)** until that distance is what you want, then, if you like the value, move it
-into `BaseForceFactor` in `src/dll/Dash.cs` so it becomes the new default.
+into `BaseForceFactor` in `src/dll/Dash.cs` so it becomes the new default. That is exactly
+how the current default was found: 2.2 carried ~25 m, the slider said 40%, and 2.2 x 0.40
+became 0.88.
+
+`model x` in that line is the accuracy of `SpeedPerImpulse`, which governs how much momentum
+Momentum Lite rations. Close to 1.00 means the model is right; a persistent offset is the
+factor to fold into `ModelCorrection`.
 
 ## How it works
 

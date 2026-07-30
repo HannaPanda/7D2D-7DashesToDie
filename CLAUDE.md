@@ -13,7 +13,8 @@ Project context and workflows for this repo live in **[AGENTS.md](AGENTS.md)** -
 - Before deploying the DLL, make sure 7DTD is **not running** (it locks the file).
 - Never hand-edit `SevenDashesToDie/Config/Localization.csv`; run
   `python src/gen/gen_localization.py`.
-- The mod is **not play-tested yet**. Do not describe the dash's feel or distance as known;
-  the numbers in `Dash.cs` are estimates until the `DebugLog` switch has measured them.
+- The dash numbers in `Dash.cs` are **measured, not estimated** (1.0.4). `BaseForceFactor`
+  and `ModelCorrection` both come from logged runs - do not "clean them up" to rounder
+  values without a new measurement.
 - Releases go out via a version tag (`git tag vX.Y.Z && git push origin vX.Y.Z`), which
   triggers CI.

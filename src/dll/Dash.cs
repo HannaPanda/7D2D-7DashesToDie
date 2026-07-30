@@ -28,8 +28,15 @@ namespace SevenDashesToDie
     {
         public const string PerkName = "perkRuleTwoDoubleTap";
 
-        /// <summary>Dash impulse as a multiple of the controller's own jump force, at rank 1.</summary>
-        const float BaseForceFactor = 2.2f;
+        /// <summary>
+        /// Dash impulse as a multiple of the controller's own jump force, at rank 1.
+        ///
+        /// Play-tested value, not an estimate: 2.2 carried ~25 m from a standstill in 0.8 s,
+        /// which was far too much. Dialling the in-game Force slider found 33% short and 40%
+        /// right, so 2.2 x 0.40 = 0.88 is now the default and the slider sits at 100% again.
+        /// That is roughly 10 m on the flat at rank 1-3.
+        /// </summary>
+        const float BaseForceFactor = 0.88f;
 
         /// <summary>Frames the impulse is spread over. Higher = smoother and longer.</summary>
         const float SoftForceFrames = 6f;
@@ -255,6 +262,15 @@ namespace SevenDashesToDie
         }
 
         /// <summary>
+        /// Correction applied to the analytic model below, from 15 logged dashes: the model
+        /// under-predicted the peak speed by a median factor of 1.74 (min 1.43, max 2.09,
+        /// sigma 0.16 - the scatter is sampling noise, since the peak lasts a tick or two and
+        /// is read once per frame). The measurement is the credible side of that gap: a peak
+        /// of ~34 m/s could not have produced the 25 m covered in 0.8 s, ~60 m/s can.
+        /// </summary>
+        const float ModelCorrection = 1.74f;
+
+        /// <summary>
         /// Metres per second gained per unit of AddSoftForce impulse.
         ///
         /// ⚠ THIS IS A MODEL, not a measurement. The impulse lands in m_ExternalForce, which
@@ -286,7 +302,7 @@ namespace SevenDashesToDie
                 ? n
                 : retain * (1f - Mathf.Pow(retain, n)) / (1f - retain);
 
-            return buildup / (n * dt);
+            return ModelCorrection * buildup / (n * dt);
         }
 
         /// <summary>
