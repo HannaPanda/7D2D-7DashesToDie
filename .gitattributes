@@ -13,3 +13,7 @@
 
 # Ship the dash clip byte-for-byte.
 *.wav  binary
+
+# Screenshots for the mod page are hotlinked from the repo; ship them byte-for-byte.
+*.jpg  binary
+*.png  binary

@@ -4,26 +4,53 @@
 then paste it into the mod page's description field (the Nexus editor has a **BBCode**
 toggle - paste into that, not the rich-text view, or the tags get escaped).
 
-## Image placeholders
+## Images
 
-The file contains three `%%IMG_*%%` placeholders. Nexus cannot host an image from a
-description alone, it has to exist in the mod page's **Images** tab first:
+The description **hotlinks the screenshots straight out of this repo**, so a new one is a
+commit and not a round trip through the Nexus Images tab:
 
-1. Mod page → **Images** → upload the screenshot.
-2. Open the uploaded image, copy its **direct image URL**
-   (`https://staticdelivery.nexusmods.com/mods/.../images/....jpg`).
-3. Replace the placeholder with that URL.
+```
+https://raw.githubusercontent.com/HannaPanda/7D2D-7DashesToDie/refs/heads/main/nexus/images/<file>
+```
 
-| Placeholder | What to shoot |
+| File | What it shows |
 |---|---|
-| `%%IMG_HERO%%` | The thumbnail people judge the mod by. Mid-air over a gap with a horde behind you, or the moment of separation from a zombie's swing. Motion sells this mod - a static standing shot sells nothing. |
-| `%%IMG_CONTROLS%%` | Options ▸ Controls ▸ Movement with "Dash" visible in the Player movement group, ideally with Jump and Crouch in frame so the reader sees it sitting among vanilla controls. This is the proof that it is a real, rebindable key and not a hardcoded hotkey - a question every reader will have. |
-| `%%IMG_SETTINGS%%` | The Gears settings page with all six options visible. |
+| `DashHero.jpg` | The thumbnail people judge the mod by. Motion sells this mod - a static standing shot sells nothing. |
+| `DashKey.jpg` | Options ▸ Controls ▸ Movement with "Dash" in the Player movement group. The proof that it is a real, rebindable key and not a hardcoded hotkey - a question every reader will have. |
+| `DashOptions.jpg` | The Gears settings page with all six options. |
 
-**A GIF or short video is worth more than all three.** This is a movement mod; the entire
-value proposition is how it feels in motion, and no still frame conveys that. If you record
-one, put it in the Videos tab - it becomes the page's strongest asset. Best single clip:
-run at a gap, air dash across it, keep going.
+**To swap an image:** drop the new file in `nexus/images/` under the same name, commit,
+push. The description needs no edit and the mod page updates on its next load - GitHub sends
+a short `max-age` on raw content, so it is a refresh, not a cache eviction.
+
+Rules for what goes in this folder:
+
+- **JPEG, max 1600 px wide, `-q:v 3`.** The originals are 1.7-1.9 MP PNGs at 2.3-2.8 MB
+  each; hotlinked as-is the description would pull ~7.6 MB. Converted it is ~790 KB for all
+  three. Conversion used:
+  ```
+  ffmpeg -y -i in.png -vf "scale='min(1600,iw)':-2" -q:v 3 out.jpg
+  ```
+- **Keep the filenames stable.** They are baked into the description; renaming one silently
+  breaks a live mod page.
+- The uncompressed originals are not kept here. Upload those to the Images tab (see below);
+  this folder holds the web copies only.
+
+**Two things this does not replace:**
+
+1. **Still upload the screenshots to the mod page's Images tab.** The gallery, the thumbnail
+   and the search preview all come from there, not from the description. The hotlinking only
+   saves the copy-the-CDN-URL step for images embedded *in the body*.
+2. **Nexus may not permit external image hosts in a description.** This setup is deliberately
+   an experiment. If the images come out broken or stripped in the Nexus preview, fall back
+   to uploading them and pasting the resulting
+   `https://staticdelivery.nexusmods.com/mods/.../images/....jpg` URLs - the layout is
+   unchanged, only the three URLs differ. Check the preview before saving.
+
+**A GIF or short video is worth more than all three stills.** This is a movement mod; the
+entire value proposition is how it feels in motion, and no still frame conveys that. If you
+record one, put it in the Videos tab - it becomes the page's strongest asset. Best single
+clip: run at a gap, air dash across it, keep going.
 
 ## Audio provenance
 
