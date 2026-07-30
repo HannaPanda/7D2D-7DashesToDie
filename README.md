@@ -18,8 +18,12 @@ A **dash**, an **air dash** and a **double air dash**, unlocked through a new Ag
 
 ## Status
 
-Play-tested and tuned on 7DTD 3.0.1. A dash carries roughly **10 m on the flat** at the
-default force; the Force slider spans about 6 m to 76 m if you want it shorter or sillier.
+Play-tested and tuned on **V 3.0.1 (b4)** - the only build 1.0.4 was launched on with the log
+checked. Other 3.x builds are untested rather than unsupported; because the ability is a
+Harmony DLL, each release has to re-establish that list.
+
+A dash carries roughly **10 m on the flat** at the default force; the Force slider spans about
+6 m to 76 m if you want it shorter or sillier.
 
 ## Requirements
 

@@ -97,9 +97,14 @@ jobs:
           files: dist/*.zip
           generate_release_notes: true
           body: |
-            7 Days to Die V3.0. A dash, an air dash and a double air dash, unlocked through
-            the Agility perk **Rule 2: Double Tap**. Default key **V**, rebindable in the
-            game's own Controls menu.
+            A dash, an air dash and a double air dash, unlocked through the Agility perk
+            **Rule 2: Double Tap**. Default key **V**, rebindable in the game's own Controls
+            menu. A dash carries roughly 10 m; the in-game Force slider spans ~6 m to ~75 m.
+
+            **Tested on: V 3.0.1 (b4).** That is the only build this version was launched on
+            with the log checked - other 3.x builds are untested rather than unsupported.
+            Since the whole ability lives in a Harmony DLL, every release has to re-establish
+            that list from scratch.
 
             - Requires EasyAntiCheat **off** (Harmony DLL).
             - [Gears](https://www.nexusmods.com/7daystodie/mods/4017) is **optional**: with it

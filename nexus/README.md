@@ -4,6 +4,26 @@
 then paste it into the mod page's description field (the Nexus editor has a **BBCode**
 toggle - paste into that, not the rich-text view, or the tags get escaped).
 
+## Summary field (max 350 characters)
+
+Paste this into the mod page's **Summary** box - it is what shows under the title in search
+results and on category listings, and it is the only text most people read before deciding
+whether to click:
+
+```
+A dash, an air dash and a double air dash, earned through a new Agility perk: Rule 2: Double Tap. Rebindable key, costs stamina, has a cooldown - a tool, not a flight mode. Strength, cooldown and cost are configurable in-game with Gears. Still in development; balance feedback welcome.
+```
+
+285 characters. Deliberately leads with what it *is* rather than with the wordplay: the title
+already carries the joke, and a summary that repeats it says nothing about the mod. "A tool,
+not a flight mode" is there to pre-empt the reader who files this next to the noclip cheats.
+
+Alternative, 274 characters, if a hook reads better than a definition in the listings:
+
+```
+Tap a key, be somewhere else. Adds a dash, an air dash and a double air dash, unlocked through the new Agility perk Rule 2: Double Tap. Rebindable key, costs stamina, has a cooldown. Fully tunable in-game with Gears. Still in development - tell me what strength feels right.
+```
+
 ## Images
 
 The description **hotlinks the screenshots straight out of this repo**, so a new one is a
