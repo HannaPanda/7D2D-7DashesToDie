@@ -2,6 +2,13 @@
 
 ## Build the DLL
 
+**Bump the version first, then build.** `SevenDashesToDie/ModInfo.xml` and
+`src/dll/SevenDashesToDie.csproj` both carry it, and the csproj value is compiled *into* the
+assembly. Building before the bump ships a binary stamped with the previous version - which
+is how 1.0.2 went out carrying a `1.0.1` assembly, and how the 1.0.3 commit initially
+contained a 1.0.1 binary next to a 1.0.3 `ModInfo.xml`. CI now refuses a release in that
+state (see "Check the DLL matches ModInfo's version"), but the ordering is still on you.
+
 ```
 cd src/dll
 DOTNET_ROLL_FORWARD=LatestMajor dotnet build -c Release -o out
@@ -13,8 +20,10 @@ The `.csproj` references the game's assemblies by absolute path
 installed. A clean build proves the API usage against the real DLL; it proves nothing about
 runtime behaviour.
 
-**Close 7DTD first** - a running game locks the DLL and the copy fails with "Permission
-denied".
+**Only the modlist copy needs 7DTD closed.** A running game locks
+`C:\Modlists\...\SevenDashesToDie.dll`, not the one in this repo. Keep the two copies as
+separate steps - `out/` → repo always runs, repo → modlist waits for the game to exit.
+Skipping both because the game is open is what left the repo holding a stale binary.
 
 ## Regenerate localization
 
