@@ -82,6 +82,26 @@ reported. The description's AI disclosure section carries the same statement.
   `SevenDashesToDie/ModSettings.xml` and `src/dll/SevenDashesMod.cs` on purpose, since the
   mod page cannot read them.
 
+## The "still in development" section
+
+Sits directly under the intro, before "What it does", so nobody reads the feature list first
+and the caveat second. It does two jobs:
+
+- **Sets expectations** that balance will move between versions, with the 1.0.4 force change
+  as the concrete example. A mod page that promises stability and then changes the feel
+  reads as a bait-and-switch; one that says so up front reads as honest.
+- **Asks for the one thing that cannot be tested alone** - what Force percentage people
+  settle on, and why. The three bullet questions are deliberately answerable in one line,
+  because a request for a paragraph gets no replies.
+
+The `[quote]` about settings surviving updates belongs with it: a reader who just learned the
+default can move will immediately wonder whether their own value is safe. It is - Gears keeps
+what you changed - and saying so removes the only real objection to shipping new defaults.
+
+**Remove or soften this section once the balance settles.** A permanent "in development"
+banner stops meaning anything, and by then the Force default should be answering the question
+instead of asking it.
+
 ## Things the page deliberately says out loud
 
 Recorded here so they do not get "cleaned up" later by someone who reads them as negatives:
