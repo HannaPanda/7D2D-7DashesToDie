@@ -46,6 +46,38 @@ namespace SevenDashesToDie
         /// <summary>A second air charge (the "double" in Double Tap) unlocks at this rank.</summary>
         const int DoubleAirDashRank = 5;
 
+        // --- "Momentum Lite" ----------------------------------------------------------
+        // vp_FPController.FixedMove starts with
+        //     m_MoveDirection = m_MoveDirection + m_ExternalForce
+        // where m_MoveDirection is the motor (your walk/sprint) and m_ExternalForce is the
+        // pot AddSoftForce pays into. So a raw impulse stacks fully on top of sprinting, and
+        // a sprint dash was far stronger than a standing one - by much more than a rank
+        // step, which made the 1.00 -> 1.12 progression invisible.
+        //
+        // Instead of deleting that momentum (which reads as hitting a wall), only a slice of
+        // it counts, and only the slice already travelling the way you dash:
+        //     along  = max(0, dot(velocity, dashDir))
+        //     target = min(dashSpeed + along * Share, dashSpeed * Cap)
+        //     gain   = max(0, target - along)
+        // Sprinting forward and dashing forward is still the fastest option; sprinting
+        // forward and dashing sideways gives a clean sideways dodge instead of a diagonal
+        // drift. `along` is clamped at zero on purpose: a backdash while sprinting forward is
+        // the panic button, and must not be the weakest dash in the game.
+
+        /// <summary>How much of the momentum already going the dash way is kept.</summary>
+        const float MomentumShare = 0.25f;
+
+        /// <summary>Ceiling on the momentum bonus, as a multiple of the plain dash speed.</summary>
+        const float MomentumCap = 1.2f;
+
+        /// <summary>
+        /// Floor for the momentum reduction, as a fraction of the unmodified impulse. This is
+        /// a safety net, not a tuning knob: SpeedPerImpulse below is a MODEL of UFPS'
+        /// internals, and if it is wrong the worst case has to stay playable rather than
+        /// turning the dash into a twitch or a catapult.
+        /// </summary>
+        const float MinImpulseFraction = 0.3f;
+
         // Per-player state. There is one local player, but it is recreated on respawn and
         // relog, so the state is tied to the instance it belongs to.
         static EntityPlayerLocal owner;
@@ -147,8 +179,21 @@ namespace SevenDashesToDie
             Vector3 dir = DashDirection(player);
             if (dir.sqrMagnitude < 0.001f) return;
 
-            float force = fpc.MotorJumpForce * BaseForceFactor
-                          * RankForce[rank - 1] * Settings.ForceScale;
+            // The plain dash, unchanged: this is the impulse that play-tested well from a
+            // standstill, and Momentum Lite only ever reduces it.
+            float impulse = fpc.MotorJumpForce * BaseForceFactor
+                            * RankForce[rank - 1] * Settings.ForceScale;
+
+            float perImpulse = SpeedPerImpulse(fpc);
+            float dashSpeed = impulse * perImpulse;
+
+            // Only momentum already heading the dash way counts, and never negatively.
+            float along = Mathf.Max(0f, Vector3.Dot(HorizontalVelocity(fpc), dir));
+            float target = Mathf.Min(dashSpeed + along * MomentumShare, dashSpeed * MomentumCap);
+            float gain = Mathf.Max(0f, target - along);
+
+            float force = perImpulse > 0.0001f ? gain / perImpulse : impulse;
+            force = Mathf.Clamp(force, impulse * MinImpulseFraction, impulse);
 
             // In the air, cancel the accumulated fall so the dash reads as a flat glide
             // instead of a diagonal dive.
@@ -165,7 +210,7 @@ namespace SevenDashesToDie
 
             DashSound.Play(Settings.Volume);
 
-            if (Settings.DebugLog) StartMeasurement(player, grounded, force, rank);
+            if (Settings.DebugLog) StartMeasurement(player, grounded, force, rank, along, target);
         }
 
         /// <summary>WASD relative to where the player is facing; no input dashes forward.</summary>
@@ -201,6 +246,49 @@ namespace SevenDashesToDie
             return dir.sqrMagnitude < 0.001f ? Vector3.zero : dir.normalized;
         }
 
+        /// <summary>The player's speed across the ground, in m/s.</summary>
+        static Vector3 HorizontalVelocity(vp_FPController fpc)
+        {
+            Vector3 v = fpc.Velocity; // = CharacterController.velocity, i.e. real m/s
+            v.y = 0f;
+            return v;
+        }
+
+        /// <summary>
+        /// Metres per second gained per unit of AddSoftForce impulse.
+        ///
+        /// ⚠ THIS IS A MODEL, not a measurement. The impulse lands in m_ExternalForce, which
+        /// vp_FPController.FixedMove adds to the per-tick move delta and UpdateForces then
+        /// shrinks each tick with
+        ///     m_ExternalForce /= 1 + PhysicsForceDamping * AdjustedTimeScale
+        /// (a division, not a multiplication - so the per-tick retention is 1/(1+damping)).
+        /// AddSoftForce feeds impulse/frames in per tick, so the force builds as a truncated
+        /// geometric series before it decays. Speed is that peak divided by the tick length.
+        ///
+        /// What the model cannot see is what SmoothMove does afterwards: it hands
+        /// m_MoveDirection to a vp_PlayerEventHandler.Move message and rescales by
+        /// Time.deltaTime, and the chain past that point is not worth reverse-engineering
+        /// blind. So the result is treated as an estimate: the caller clamps the computed
+        /// impulse into [MinImpulseFraction, 1] x the plain impulse, and the DebugLog switch
+        /// prints predicted against measured speed so one test run can correct it.
+        /// </summary>
+        static float SpeedPerImpulse(vp_FPController fpc)
+        {
+            float dt = Time.fixedDeltaTime;
+            if (dt <= 0.0001f) dt = 0.02f;
+
+            float damping = Mathf.Max(0f, fpc.PhysicsForceDamping);
+            float retain = 1f / (1f + damping);
+            float n = Mathf.Max(1f, SoftForceFrames);
+
+            // Sum of retain^1 .. retain^n; degenerates to n when there is no damping.
+            float buildup = damping <= 0.0001f
+                ? n
+                : retain * (1f - Mathf.Pow(retain, n)) / (1f - retain);
+
+            return buildup / (n * dt);
+        }
+
         /// <summary>
         /// One passive effect for this player, with the same argument set MoveByInput uses.
         /// </summary>
@@ -230,15 +318,24 @@ namespace SevenDashesToDie
         }
 
         // -----------------------------------------------------------------------------
-        // Tuning aid: measures how far a dash actually carried and logs it, so the force
-        // can be set from a number instead of from a feeling. Off unless the Gears
-        // "DebugLog" switch is on.
+        // Tuning aid. Off unless the Gears "DebugLog" switch is on.
+        //
+        // Two jobs. It reports how far a dash actually carried, so the force can be set from
+        // a number instead of a feeling - and it prints the SpeedPerImpulse model's predicted
+        // speed next to the peak speed actually reached, so one test run says whether that
+        // model holds. If predicted and measured disagree, the ratio between them is the
+        // correction factor for SpeedPerImpulse; until then the impulse clamp keeps the
+        // damage contained.
         // -----------------------------------------------------------------------------
 
         static float pendingForce;
         static int pendingRank;
+        static float pendingPredicted;
+        static float pendingAlong;
+        static float pendingPeak;
 
-        static void StartMeasurement(EntityPlayerLocal player, bool grounded, float force, int rank)
+        static void StartMeasurement(EntityPlayerLocal player, bool grounded, float force, int rank,
+                                     float along, float predictedTarget)
         {
             measuring = true;
             measureFrom = player.position;
@@ -246,18 +343,40 @@ namespace SevenDashesToDie
             measuredInAir = !grounded;
             pendingForce = force;
             pendingRank = rank;
+            pendingAlong = along;
+            pendingPredicted = predictedTarget;
+            pendingPeak = 0f;
         }
 
         static void ReportMeasurement(EntityPlayerLocal player)
         {
-            if (!measuring || Time.time < measureUntil) return;
+            if (!measuring) return;
+
+            // Sample every frame: the peak lands within a few ticks of the impulse, so
+            // reading only at the end of the window would miss it entirely.
+            vp_FPController fpc = player.vp_FPController;
+            if (fpc != null)
+            {
+                float speed = HorizontalVelocity(fpc).magnitude;
+                if (speed > pendingPeak) pendingPeak = speed;
+            }
+
+            if (Time.time < measureUntil) return;
             measuring = false;
 
             Vector3 delta = player.position - measureFrom;
             delta.y = 0f;
+
+            string model = pendingPredicted > 0.01f
+                ? string.Format("predicted {0:0.0} -> measured {1:0.0} m/s (model x{2:0.00})",
+                                pendingPredicted, pendingPeak, pendingPeak / pendingPredicted)
+                : string.Format("peak {0:0.0} m/s", pendingPeak);
+
             Log.Out(string.Format(SevenDashesMod.LogPrefix +
-                "dash rank {0} {1}: force {2:0.###}, travelled {3:0.00} m in 0.8 s, air charges left {4}",
-                pendingRank, measuredInAir ? "(air)" : "(ground)", pendingForce, delta.magnitude, airCharges));
+                "dash rank {0} {1}: entry speed {2:0.0} m/s, force {3:0.###}, {4}, " +
+                "travelled {5:0.00} m in 0.8 s, air charges left {6}",
+                pendingRank, measuredInAir ? "(air)" : "(ground)", pendingAlong,
+                pendingForce, model, delta.magnitude, airCharges));
         }
     }
 }

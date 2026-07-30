@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.3 - 2026-07-30
+
+"Momentum Lite": a sprint dash is no longer a plain speed multiplier.
+
+- `vp_FPController.FixedMove` opens with `m_MoveDirection = m_MoveDirection + m_ExternalForce`,
+  so the dash impulse stacked fully on top of sprinting. The sprint bonus was worth far more
+  than a rank step, which made the 1.00 -> 1.12 progression invisible under it.
+- Momentum is now kept but rationed: only the component already travelling the dash
+  direction counts, at 25%, capped at 1.2x the plain dash speed. Sprint-and-dash-forward is
+  still the fastest option; sprint-and-dash-sideways no longer inherits the full sprint.
+- The `along` term is clamped at zero, so a backdash out of a forward sprint keeps full
+  strength. It is the panic button and must not be the weakest dash in the game.
+- The plain standstill dash is deliberately unchanged, so this release changes exactly one
+  variable.
+- `SpeedPerImpulse` is a model of UFPS' force handling, not a measurement, so the computed
+  impulse is clamped to between 30% and 100% of the unmodified one. With `DebugLog` on, each
+  dash now logs entry speed, predicted speed and the peak actually reached, and the ratio
+  between the last two is the correction factor for the model.
+
 ## 1.0.2 - 2026-07-30
 
 - **Fixed: dashing always went straight ahead**, whichever way you were actually moving.

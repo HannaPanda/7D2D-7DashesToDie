@@ -54,6 +54,49 @@ currently uses, instead of hardcoding a number that a retune would silently inva
 `BaseForceFactor = 2.2` is a starting estimate, not a measured value - the `DebugLog`
 switch exists to replace it with a measured one.
 
+### Momentum Lite
+
+`FixedMove` opens with `m_MoveDirection = m_MoveDirection + m_ExternalForce`, where
+`m_MoveDirection` is the motor (walking, sprinting) and `m_ExternalForce` is the pot
+`AddSoftForce` pays into. A raw impulse therefore **stacks fully on top of sprinting**. Play
+testing found the sprint bonus worth far more than a rank step, which buried the
+1.00 → 1.12 progression under it - five ranks nobody can feel are five wasted skill points.
+
+Deleting the momentum instead reads as hitting a wall, so it is rationed:
+
+```
+along  = max(0, dot(horizontalVelocity, dashDir))
+target = min(dashSpeed + along * 0.25, dashSpeed * 1.2)
+gain   = max(0, target - along)
+```
+
+Two details carry the design:
+
+- **Only the component already travelling the dash direction counts.** Sprinting forward and
+  dashing forward stays the fastest option; sprinting forward and dashing sideways no longer
+  inherits the whole sprint into the dodge.
+- **`along` is clamped at zero.** A backdash out of a forward sprint has a negative dot
+  product, and the unclamped formula would make it the *weakest* dash available - precisely
+  in the moment it is the panic button.
+
+**⚠ What this does not do:** the motor keeps running during the dash. `m_MoveDirection` is
+motor *plus* external force, so a sideways dash while still holding W remains diagonal - the
+sideways component is now clean, but the player's own sprint continues underneath it. Only
+the dash's contribution is governed here, never the player's input.
+
+**⚠ `SpeedPerImpulse` is a model, not a measurement.** `UpdateForces` shrinks the external
+force each tick with `m_ExternalForce /= 1 + PhysicsForceDamping * AdjustedTimeScale` - a
+division, so per-tick retention is `1/(1+damping)` - while `AddSoftForce` feeds
+`impulse/frames` in per tick, giving a truncated geometric build-up before the decay. Speed
+is that peak over the tick length. What the model cannot see is `SmoothMove`, which passes
+`m_MoveDirection` through a `vp_PlayerEventHandler.Move` message and rescales by
+`Time.deltaTime`; reverse-engineering that chain blind is not worth it.
+
+So the estimate is treated as one. The computed impulse is clamped to
+`[0.3, 1.0] × the plain impulse`, meaning a wrong model degrades to "roughly like before"
+rather than to a twitch or a catapult, and `DebugLog` prints predicted against measured peak
+speed on every dash. The ratio between those two is the correction factor.
+
 ## 2. A mod can add a key to the vanilla Controls menu
 
 `XUiC_OptionsControls.createControlsEntries` builds its list at runtime: it walks the five
