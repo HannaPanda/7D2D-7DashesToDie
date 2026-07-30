@@ -163,7 +163,7 @@ namespace SevenDashesToDie
             if (cost > 0f && stamina != null) stamina.Value = stamina.Value - cost;
             nextDashTime = Time.time + Settings.CooldownSeconds * RankCooldown[rank - 1];
 
-            player.PlayOneShot("swoosh", false, false, false, null, Settings.Volume);
+            DashSound.Play(Settings.Volume);
 
             if (Settings.DebugLog) StartMeasurement(player, grounded, force, rank);
         }
@@ -171,18 +171,44 @@ namespace SevenDashesToDie
         /// <summary>WASD relative to where the player is facing; no input dashes forward.</summary>
         static Vector3 DashDirection(EntityPlayerLocal player)
         {
-            MovementInput mi = player.movementInput;
-            Vector3 local = mi != null
-                ? new Vector3(mi.moveStrafe, 0f, mi.moveForward)
-                : Vector3.forward;
+            // ⚠ Read the axes from InControl, NOT from EntityPlayerLocal.movementInput.
+            // movementInput is filled by PlayerMoveController.Update and consumed by
+            // EntityPlayerLocal.MoveByInput; Unity does not order those against our postfix
+            // on EntityPlayerLocal.Update, and in practice it reads back as zero there - so
+            // every dash fell through to the "no input" case and went straight ahead,
+            // whichever way the player was actually moving. The action set is live state and
+            // has no such ordering dependency.
+            //
+            // PlayerActionsLocal.Move was built as
+            // CreateTwoAxisPlayerAction(negativeX: MoveLeft, positiveX: MoveRight,
+            //                           negativeY: MoveBack, positiveY: MoveForward)
+            // so X is strafe (+right) and Y is forward (+forward).
+            Vector2 move = Vector2.zero;
+            PlayerActionsLocal input = player.playerInput;
+            if (input != null && input.Move != null) move = new Vector2(input.Move.X, input.Move.Y);
 
-            if (local.sqrMagnitude < 0.01f) local = Vector3.forward;
+            // MoveByInput negates both axes under the FlipControls effect. Mirror that, or a
+            // flipped player would dash away from the direction they are walking.
+            if (Effect(player, PassiveEffects.FlipControls) > 0f) move = -move;
+
+            Vector3 local = new Vector3(move.x, 0f, move.y);
+            if (local.sqrMagnitude < 0.04f) local = Vector3.forward; // below deadzone: straight ahead
             local.Normalize();
 
             // Entity.rotation is euler degrees; only the yaw matters for a flat dash.
             Vector3 dir = Quaternion.Euler(0f, player.rotation.y, 0f) * local;
             dir.y = 0f;
             return dir.sqrMagnitude < 0.001f ? Vector3.zero : dir.normalized;
+        }
+
+        /// <summary>
+        /// One passive effect for this player, with the same argument set MoveByInput uses.
+        /// </summary>
+        static float Effect(EntityAlive player, PassiveEffects effect)
+        {
+            return EffectManager.GetValue(effect, null, 0f, player, null,
+                                          default(FastTags<TagGroup.Global>),
+                                          true, true, true, true, true, 1, true, false);
         }
 
         /// <summary>States in which a dash must not fire.</summary>
@@ -194,6 +220,8 @@ namespace SevenDashesToDie
             if (player.IsSwimming()) return false;
             if (player.IsFlyMode != null && player.IsFlyMode.Value) return false;
             if (!fpc.enabled) return false;
+            // MoveByInput clears all movement input under this effect; a dash must obey it too.
+            if (Effect(player, PassiveEffects.DisableMovement) > 0f) return false;
 
             LocalPlayerUI ui = LocalPlayerUI.GetUIForPlayer(player);
             if (ui != null && ui.windowManager != null && ui.windowManager.IsInputActive()) return false;

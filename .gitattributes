@@ -10,3 +10,6 @@
 *.py   text eol=lf
 *.csproj text eol=lf
 *.bbcode text eol=lf
+
+# Ship the dash clip byte-for-byte.
+*.wav  binary

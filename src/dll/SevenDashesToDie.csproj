@@ -11,7 +11,7 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Deterministic>true</Deterministic>
     <DebugType>none</DebugType>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,6 +41,11 @@
     </Reference>
     <Reference Include="LogLibrary">
       <HintPath>C:\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\LogLibrary.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- AudioClip / AudioSource for the dash sound. -->
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>C:\Steam\steamapps\common\7 Days To Die\7DaysToDie_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <!-- Entity.PlayOneShot takes an AnimationEvent parameter (passed as null). -->

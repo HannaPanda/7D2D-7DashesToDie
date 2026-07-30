@@ -15,10 +15,14 @@ namespace SevenDashesToDie
         public const string ModName = "SevenDashesToDie";
         public const string LogPrefix = "[7 Dashes to Die] ";
 
+        /// <summary>Mod folder on disk; the dash clip is loaded relative to it.</summary>
+        public static string ModPath = "";
+
         public void InitMod(Mod _modInstance)
         {
+            ModPath = _modInstance.Path;
             new Harmony("hannapanda.sevendashestodie").PatchAll(Assembly.GetExecutingAssembly());
-            Log.Out(LogPrefix + "loaded, Harmony patches applied");
+            Log.Out(LogPrefix + "loaded from " + ModPath + ", Harmony patches applied");
         }
     }
 

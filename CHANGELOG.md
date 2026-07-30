@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.2 - 2026-07-30
+
+- **Fixed: dashing always went straight ahead**, whichever way you were actually moving.
+  The direction was read from `EntityPlayerLocal.movementInput`, which
+  `PlayerMoveController.Update` fills and `MoveByInput` consumes - Unity does not order
+  either against our postfix on `EntityPlayerLocal.Update`, and it read back as zero, so
+  every dash fell through to the "no input" case. The axes now come from the live action
+  set (`playerInput.Move`, X = strafe, Y = forward), which has no ordering dependency.
+- The dash now has its own sound (`Resources/dash1.wav`), decoded from plain PCM by the
+  DLL, instead of borrowing the game's `swoosh`.
+- A dash now obeys the `FlipControls` effect (axes inverted, matching `MoveByInput`) and is
+  refused under `DisableMovement`.
+
 ## 1.0.1 - 2026-07-30
 
 Fixes the dash key not appearing anywhere in Options > Controls.

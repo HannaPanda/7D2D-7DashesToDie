@@ -124,7 +124,12 @@ Copy `out/SevenDashesToDie.dll` into `SevenDashesToDie/`.
 ## AI-generated content
 
 Code, XML and the translations were written with the help of Anthropic's Claude and reviewed
-before release. The dash sound is the game's own `swoosh`; no new audio ships with this mod.
+before release.
+
+**The dash sound (`SevenDashesToDie/Resources/dash1.wav`) needs a provenance line before
+release.** It was supplied as a finished file, so its origin, licence and whether it is
+AI-generated are not recorded here. Nexus asks about AI-generated assets at upload time and
+the answer has to be truthful, so fill this in — see `nexus/README.md`.
 
 ## Credits
 

@@ -25,6 +25,27 @@ value proposition is how it feels in motion, and no still frame conveys that. If
 one, put it in the Videos tab - it becomes the page's strongest asset. Best single clip:
 run at a gap, air dash across it, keep going.
 
+## ⚠ Unresolved before the first upload: the dash sound
+
+`SevenDashesToDie/Resources/dash1.wav` arrived as a finished file. Its origin, licence and
+whether it is AI-generated are **not recorded anywhere in this repo**, and both Nexus and the
+description depend on the answer:
+
+- Nexus asks at upload time whether the mod contains AI-generated assets. The answer has to
+  be truthful, and audio counts.
+- A sample from a commercial pack usually may be redistributed inside a mod, but some
+  licences forbid exactly that. A clip lifted from another game or a video cannot ship at all.
+
+Two placeholders wait on it:
+
+| Placeholder | Fill with |
+|---|---|
+| `%%SOUND_CREDIT%%` | The credit line, e.g. "The dash sound was generated with ElevenLabs" or "Dash sound by <author>, <licence>" or "Dash sound recorded by hannapanda". |
+| `%%AI_AUDIO_LINE%%` | Either "No generated art, audio or voice is included." or the honest alternative, e.g. "The dash sound was generated with <tool>." |
+
+Until both are filled, the description is not ready to paste. The same answer belongs in
+`README.md`, which currently carries a note in the AI-generated-content section.
+
 ## Notes
 
 - Nexus renders on a **dark** background. The accent colour `#4fc3f7` is a light blue picked

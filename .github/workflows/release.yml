@@ -53,6 +53,9 @@ jobs:
           test -f SevenDashesToDie/SevenDashesToDie.dll
           test -f SevenDashesToDie/Config/progression.xml
           test -f SevenDashesToDie/Config/Localization.csv
+          test -f SevenDashesToDie/Resources/dash1.wav
+          # the clip must be a real RIFF/WAVE file, not an LFS stub
+          test "$(head -c 4 SevenDashesToDie/Resources/dash1.wav)" = "RIFF"
           # the DLL must be a real assembly, not a truncated/LFS-stub file
           test "$(head -c 2 SevenDashesToDie/SevenDashesToDie.dll)" = "MZ"
           # localization is loaded ONLY from Localization.csv; a .txt would be dead weight
