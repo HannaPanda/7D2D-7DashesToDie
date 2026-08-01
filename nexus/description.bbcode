@@ -116,6 +116,10 @@ One Harmony postfix on the local player's update, which reads a handful of key s
 [center][color=#4fc3f7]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/color][/center]
 
 [size=5][b][color=#4fc3f7]Changelog[/color][/b][/size]
+[size=3][b]1.1.1[/b][/size]
+[list]
+[*][b]Fixed: your dash binding survives a restart.[/b] The game applies saved bindings before any mod has loaded, so the dash was falling back to its default on every launch. Reported for the controller button, but the keyboard key had exactly the same hole - it just looked healthy if you had left it on V. Nothing was ever lost on your side: the binding sat on disk the whole time and simply never came back. If you gave up on rebinding it, it is worth another go.
+[/list]
 [size=3][b]1.1.0[/b][/size]
 [list]
 [*][b]New: the dash is bindable to a controller button[/b] - its own row under [i]Options ▸ Controller ▸ On Foot[/i], and it stays there after "Reset to defaults". Ships unbound, because vanilla already uses every button worth stealing.
