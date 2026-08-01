@@ -99,17 +99,20 @@ jobs:
           body: |
             A dash, an air dash and a double air dash, unlocked through the Agility perk
             **Rule 2: Double Tap**. Default key **V**, rebindable in the game's own Controls
-            menu. A dash carries roughly 10 m; the in-game Force slider spans ~6 m to ~75 m.
+            menu, with its own row under Options ▸ Controller ▸ On Foot (unbound by default).
+            Optionally triggered by tapping a movement key twice. A dash carries roughly 10 m;
+            the in-game Force slider spans ~6 m to ~75 m.
 
-            **Tested on: V 3.0.1 (b4).** That is the only build this version was launched on
-            with the log checked - other 3.x builds are untested rather than unsupported.
-            Since the whole ability lives in a Harmony DLL, every release has to re-establish
-            that list from scratch.
+            **Tested on: V 3.0.0, V 3.0.1 (b4) and V 3.1.0.** Each was started headless with
+            the mod installed and the log checked, and then played: the controller row binds
+            and survives a controller reset, and the double tap fires. Other 3.x builds are
+            untested rather than unsupported. Since the whole ability lives in a Harmony DLL,
+            every release has to re-establish that list from scratch.
 
             - Requires EasyAntiCheat **off** (Harmony DLL).
             - [Gears](https://www.nexusmods.com/7daystodie/mods/4017) is **optional**: with it
-              you get in-game settings for force, cooldown, stamina cost and volume; without
-              it the mod runs on its built-in defaults.
+              you get in-game settings for force, cooldown, stamina cost, volume and the
+              double tap; without it the mod runs on its built-in defaults.
             - Multiplayer: install on the client for the ability, and on the server so the
               perk exists in the skill tree.
 

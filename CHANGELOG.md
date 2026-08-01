@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.1.0 - 2026-07-31
+
+Two ways to ask for a dash that were not there before. The ability itself is untouched -
+same force, same cooldown, same ranks.
+
+- **The dash is now bindable to a controller button.** Options ▸ Controller ▸ On Foot has a
+  "Dash" row, rebindable like any vanilla one. It ships **unbound**: every face button,
+  bumper, trigger, stick click and d-pad direction bar one is already taken by vanilla, and
+  quietly claiming the leftover would be worse than an empty row you can fill yourself.
+  - Worth knowing for other modders: the controller screen is a **separate list** from the
+    keyboard one. `XUiC_OptionsControls` walks `PlayerActionSet.Actions`;
+    `XUiC_OptionsController` ignores that and reads the public field
+    `PlayerActionsBase.ControllerRebindableActions`. Being in `Actions` with
+    `EAppliesToInputType.Both` gets you a key row and no gamepad row - which is exactly what
+    1.0.4 shipped.
+  - `CreateDefaultJoystickBindings` **clears** that list before refilling it, so "Reset to
+    defaults" in the controller options used to be enough to lose a modded row. There is now
+    a postfix that puts it back.
+- **Optional double tap.** Tap a movement key twice and you dash that way - so a double tap
+  of A dodges left even while W is held. **Off by default**, because a false detection costs
+  stamina and moves you; turn it on under Gears ▸ 7 Dashes to Die.
+  - New setting **Double tap window (ms)**, default **300**, range 150-600. Windows' own
+    double-click default of 500 ms is far too slack for a movement key - ordinary strafe
+    corrections start dashing on their own. Competitive dodge windows sit at 200-250 ms,
+    which is reliable only if you practise it. 300 ms is reachable without aiming for it and
+    still short enough that walk-stop-walk does not trip it. Phantom dashes → go down to
+    200; cannot land one → go up.
+  - The taps are read from the game's own `MoveForward/Back/Left/Right` actions, so they
+    follow your rebound keys instead of assuming WASD.
+  - The rule is a double *click*: press, release, press, with both presses inside the
+    window. Measuring from the first press is what stops "hold W across the map, let go,
+    press again" from counting - the hold itself eats the window.
+- **Headless-clean on V 3.0.0, V 3.0.1 and V 3.1.0**: mod loaded, Harmony patches applied,
+  0 ERR / 0 EXC / 0 XML problems on each. The Harmony hit is the meaningful part - it proves
+  `XUiC_OptionsController.createControlsEntries` and
+  `PlayerActionsLocal.CreateDefaultJoystickBindings` still exist on all three, and their IL
+  still uses `ControllerRebindableActions` the same way.
+- **GUI-verified on all three** (2026-08-01): on V 3.0.0, V 3.0.1 and V 3.1.0 the controller
+  row appears under Options ▸ Controller ▸ On Foot, binds, and is still there after "Reset to
+  defaults"; the double tap is configurable in Gears and fires. Both features are menu and
+  input behaviour, which `-nographics` runs not at all, so this is the part that had to be
+  watched rather than reasoned from the IL.
+
 ## 1.0.4 - 2026-07-31
 
 Play-tested tuning pass. First release whose numbers come from measurement rather than estimate.

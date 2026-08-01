@@ -1,13 +1,15 @@
 # Mechanisms
 
-Four things in this mod are not obvious from the outside. Each is recorded here with the
+The things in this mod that are not obvious from the outside. Each is recorded here with the
 evidence it was derived from - all of it read out of the installed `Assembly-CSharp.dll`
-(3.0.1) with Mono.Cecil, none of it from memory.
+with Mono.Cecil, none of it from memory. Version-sensitive claims are marked with the builds
+they were checked against.
 
 | File | Mechanism |
 |---|---|
 | `src/dll/Dash.cs` | The impulse, the charge/cooldown state machine, the guards |
-| `src/dll/DashInput.cs` | Registering a rebindable key with the vanilla Controls menu |
+| `src/dll/DashInput.cs` | Registering a rebindable key **and** a rebindable controller button |
+| `src/dll/DashDoubleTap.cs` | The optional double-tap trigger |
 | `src/dll/SevenDashesMod.cs` | Entry point and the Gears-by-reflection bridge |
 | `SevenDashesToDie/Config/progression.xml` | The perk and its Agility gate |
 
@@ -193,6 +195,90 @@ against them; it is unbound in that set.
 **Caveat:** InControl serialises bindings by action name, so changing
 `DashInput.ActionName` resets every user's key.
 
+---
+
+## 2b. The controller screen is a different list, not a different flag
+
+The obvious assumption - that `EAppliesToInputType.Both` on the `ActionUserData` gets you
+both a keyboard row and a gamepad row - is **wrong**, and it is wrong silently. 1.0.4 set
+`Both` and still had no controller entry.
+
+The two screens are sibling overrides of `XUiC_OptionsControlsBase.createControlsEntries`
+that share no code:
+
+| Screen | Class | Source of its rows | Reads `appliesToInputType`? |
+|---|---|---|---|
+| Options ▸ Controls | `XUiC_OptionsControls` | `PlayerActionSet.Actions` over five action sets | **Yes** - skips `None` and `ControllerOnly` |
+| Options ▸ Controller | `XUiC_OptionsController` | the public field `PlayerActionsBase.ControllerRebindableActions` over three action sets | **No** - never touched |
+
+From `XUiC_OptionsControls.createControlsEntries`, the filter that defines "keyboard screen":
+
+```
+ldfld  EAppliesToInputType ActionUserData::appliesToInputType
+brfalse.s <skip>        // None
+ldc.i4.2 / beq.s <skip> // ControllerOnly
+```
+
+and from `XUiC_OptionsController.createControlsEntries`, the entirely different source:
+
+```
+ldfld  List`1<PlayerAction> PlayerActionsBase::ControllerRebindableActions
+callvirt List`1<PlayerAction>::GetEnumerator()
+```
+
+Both then feed `XUiC_OptionsControlsBase/XUiC_BindingEntry::set_Action`, so a row obtained
+this way is a real, rebindable row - not a read-only label.
+
+Three consequences the code depends on:
+
+- **`ControllerRebindableActions` is a public instance field**, so appending to it needs no
+  reflection.
+- **⚠ `CreateDefaultJoystickBindings` clears it** (`…ControllerRebindableActions::Clear()`)
+  before refilling it with the vanilla actions. It runs inside `InitActionSet()` at engine
+  startup - i.e. before mods, same nineteen-second problem as above - and again through
+  `ResetControllerBindings` → `AsyncResetControllerBindings`. Without a postfix, one press of
+  "Reset to defaults" in the controller options drops the modded row until the next restart.
+- **The rows are a fixed grid.** `Data/Config/XUi_Menu/windows.xml` gives `optionsController`
+  four `<options_bindings_tab for_controller="true" />` tabs, and the `options_bindings_tab`
+  template lays out `rows="22"` binding entries; the assignment loop is
+  `entries[i].Action = i < list.Count ? list[i] : null`, so a list longer than 22 would be
+  truncated silently. Vanilla fills far fewer, so appending is safe.
+
+**Which tab it lands in.** The controller screen re-labels one tab: any action whose
+`actionTab.tabNameKey` is `inpTabPlayerControl` is moved into the list keyed
+`inpTabPlayerOnFoot`. `GroupPlayerControl` sits under `TabMovement`, whose key is exactly
+`inpTabPlayerControl`, so the dash appears under **On Foot** - the counterpart of *Movement ▸
+Player movement* on the key screen.
+
+**No default gamepad binding, on purpose.** Extracting the `InputControlType` constants from
+`PlayerActionsLocal.CreateDefaultJoystickBindings` leaves `DPadRight` (14) as the only
+unclaimed control on a standard pad. Taking it would rebind something the player never asked
+about; an empty, clearly-labelled row is the better default.
+
+**Checked against 3.0.0, 3.0.1 and 3.1.0** - same class, same field, same `Clear()`, on all
+three.
+
+---
+
+## 2c. The double tap is read from the game's own move actions
+
+`DashDoubleTap` polls `PlayerActionsLocal.MoveForward / MoveBack / MoveLeft / MoveRight`
+(each a real `PlayerAction`, so `WasPressed` / `WasReleased` come from InControl) rather than
+Unity's raw keyboard. That inherits the player's rebound keys for free and avoids the trap
+already documented for `Dash.DashDirection`: `EntityPlayerLocal.movementInput` reads back as
+zero from a postfix on `EntityPlayerLocal.Update`, because Unity does not order
+`PlayerMoveController.Update` against it.
+
+The rule is a double *click*, not two presses: **press → release → press, both presses inside
+the window**, measured from the *first press*. Measuring from the release instead would let a
+long hold ("run across the map, stop, walk on") supply the first half of a tap. The required
+release in between means a key repeat or a stuck key cannot chain, and the first press slot
+is cleared on a hit so three taps are one dash, not two.
+
+⚠ `Poll()` runs every frame and `Settings.*` goes through reflection into Gears, so the
+tracking is pure local arithmetic and the settings are read only on the frame a genuine
+second press lands.
+
 ## 3. The perk carries no passive effect, by necessity
 
 `PassiveEffects` is a plain engine enum running `None = 0` … `HeadshotDamageModifier = 202`,
@@ -225,6 +311,11 @@ impulse would be wrong or would fight the engine:
 | `!fpc.enabled` | The controller is not driving the player right now. |
 | `windowManager.IsInputActive()` | A UI window has input; the keypress is not for us. |
 
+All three triggers - dash key, controller button, double tap - go through the same
+`TryDash`, so the guards, the cooldown, the stamina cost and the perk rank apply identically
+to all of them. A double tap is not a cheaper dash.
+
 State (`airCharges`, `nextDashTime`, `wasGrounded`) is tied to the `EntityPlayerLocal`
 instance it belongs to and reset when the instance changes, because the local player is
-recreated on respawn and relog.
+recreated on respawn and relog. `DashDoubleTap`'s half-finished taps are tied to the
+`PlayerActionsLocal` instance for the same reason.

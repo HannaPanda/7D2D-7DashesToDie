@@ -17,6 +17,10 @@
         <Slider name="Volume" displayKey="uiSevenDashesVolume" tooltipKey="tipSevenDashesVolume" defaultValue="100">
           <Property increment="5" minValue="0" maxValue="100" type="incrementalValuesInt" />
         </Slider>
+        <Switch name="DoubleTap" displayKey="uiSevenDashesDoubleTap" tooltipKey="tipSevenDashesDoubleTap" defaultValue="False" leftValue="False" rightValue="True" />
+        <Slider name="DoubleTapWindow" displayKey="uiSevenDashesDoubleTapWindow" tooltipKey="tipSevenDashesDoubleTapWindow" defaultValue="300">
+          <Property increment="10" minValue="150" maxValue="600" type="incrementalValuesInt" />
+        </Slider>
         <Switch name="DebugLog" displayKey="uiSevenDashesDebug" tooltipKey="tipSevenDashesDebug" defaultValue="False" leftValue="False" rightValue="True" />
       </Category>
     </Tab>

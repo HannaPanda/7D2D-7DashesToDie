@@ -62,11 +62,46 @@ Then, in-game:
 
 1. **Options ▸ Controls ▸ Movement ▸ Player movement** - "Dash" appears at the end of that
    group (after Jump, Crouch, …) and rebinds.
-2. **Skill tree ▸ Agility ▸ Athletics** - "Rule 2: Double Tap" appears next to Parkour, gated
+2. **Options ▸ Controller ▸ On Foot** - "Dash" appears there too, **unbound**. Bind it to a
+   button and check it survives leaving and re-entering the menu.
+3. **Options ▸ Controller ▸ Reset to defaults** - the Dash row must still be there
+   afterwards (unbound again). This is the regression the
+   `CreateDefaultJoystickBindings` postfix exists for; without it the row disappears until
+   the next restart.
+4. **Skill tree ▸ Agility ▸ Athletics** - "Rule 2: Double Tap" appears next to Parkour, gated
    at Agility 1.
-3. Buy rank 1, press the key while moving - you dash, stamina drops, cooldown applies.
-4. Rank 3: dash mid-jump; the fall should cancel and carry you flat.
-5. Rank 5: two air dashes per jump, refilling on landing.
+5. Buy rank 1, press the key while moving - you dash, stamina drops, cooldown applies.
+6. Rank 3: dash mid-jump; the fall should cancel and carry you flat.
+7. Rank 5: two air dashes per jump, refilling on landing.
+8. **Gears ▸ Double tap to dash = On.** Double-tap W, then A while holding W - the second one
+   must dash *left*, not forward. Then set it back to Off and confirm double-tapping does
+   nothing at all.
+9. **Double tap window.** At 150 ms a deliberate tap-tap should be hard to land; at 600 ms
+   normal strafing should start producing dashes by itself. If neither is true, the tracker
+   is not seeing the actions.
+
+Run it with the testbench so the install is clean and Gears is there:
+
+```
+tb run --mod seven --profile gui --visual defer
+```
+
+The run ends when *you* close the game; the visual question then sits in the queue until
+someone answers it (`tb status --pending`, then `tb verify --run <runId> --visual ok`). An
+agent may start the
+run and must leave the verdict deferred - it cannot see the screen.
+
+**Gears is required for steps 8-9**, and the mod config lists `quartz` and `gears` under
+`dependencies`, so every run mirrors them into `Mods\` and the cleanup leaves them alone.
+This is not cosmetic - the old scripts kept only Harmony, so a single smoke test banished
+Gears and Quartz from all three installs and the next GUI run had no settings menu at all,
+with nothing anywhere reporting a failure. Provisioned is not loaded either: only the
+`[MODS] Loaded Mod:` line counts, and the folder name is not the name the mod reports. If a
+run flags a dependency as missing or unloaded, any settings test after it is meaningless.
+
+⚠ **Steps 1-3 and 8-9 cannot be smoke-tested.** `-nographics` runs no XUi and no input, so
+the headless matrix says nothing about them - it only proves the Harmony targets still
+exist. Menus and keys are exactly the part that needs a human.
 
 ### Tuning the force
 
@@ -85,15 +120,26 @@ Name only versions the mod was **actually launched on with the log checked**. Th
 per mod version, and **any DLL change invalidates it entirely** - which for this mod means
 every change, since the whole ability is in the DLL.
 
-The multi-version smoke test lives at `E:\7DTD-Testbench\` (`Invoke-SmokeTest.ps1 -Version
-<v>`, `Invoke-TestMatrix.ps1`). It boots each install headless and greps the log. Two limits
+The multi-version testbench is the `tb` command (source: `C:\Users\sourc\7D2D-Testbench`,
+binaries on `PATH` from `E:\7DTD-Testbench\bin`). This repo's half of the setup is
+`test/testbench.mod.json`; everything about the machine lives in the bench's own
+`testbench.json`.
+
+```
+tb doctor --json                              # before blaming the mod
+tb run --mod seven --profile matrix --json    # stage 1, all three versions
+tb report --mod seven --json                  # matrix + the TESTED_VERSIONS line
+```
+
+`report` refuses to name a version until **both** stages passed *for the current mod
+version*, and prints why each one does not count (`kein GUI-Lauf`, `Mod-Version mismatch`,
+`Sichtpruefung offen`). Do not assemble that list by hand from stage-1 results. Two limits
 that matter here:
 
 - Headless (`-nographics`) covers mod load, Harmony patches and XML, but **not input, not
   the Controls menu and not the dash itself**. Those need a GUI run per version.
-- The smoke-test scripts export and re-import `HKCU\Software\The Fun Pimps\7 Days To Die`
-  around each run, because GamePrefs are shared by every install and a fresh build
-  overwrites them.
+- The bench exports and re-imports `HKCU\Software\The Fun Pimps\7 Days To Die` around each
+  run, because GamePrefs are shared by every install and a fresh build overwrites them.
 
 ## Release
 

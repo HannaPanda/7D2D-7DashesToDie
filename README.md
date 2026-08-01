@@ -11,16 +11,24 @@ A **dash**, an **air dash** and a **double air dash**, unlocked through a new Ag
   (1 / 3 / 5 / 7 / 10). The perk sits next to Parkour under Athletics.
 - **Rebindable key** that shows up in the game's own Controls menu, under
   **Movement ▸ Player movement** next to Jump and Crouch. Default: **V**.
+- **Rebindable controller button** in **Options ▸ Controller ▸ On Foot**. Ships *unbound* -
+  vanilla already claims every button but one, so the row is yours to fill.
+- **Optional double tap**: tap a movement key twice to dash that way. Off by default, with
+  a tunable window (default 300 ms).
 - **Configurable in-game** through [Gears](https://www.nexusmods.com/7daystodie/mods/4017):
-  force, cooldown, stamina cost, volume, and whether the perk is required at all.
+  force, cooldown, stamina cost, volume, double tap, and whether the perk is required at all.
 - Localized into **13 languages** (EN, DE, ES, FR, IT, JA, KO, PL, PT-BR, RU, TR, ZH-Hans,
   ZH-Hant).
 
 ## Status
 
-Play-tested and tuned on **V 3.0.1 (b4)** - the only build 1.0.4 was launched on with the log
-checked. Other 3.x builds are untested rather than unsupported; because the ability is a
-Harmony DLL, each release has to re-establish that list.
+**Tested on V 3.0.0, V 3.0.1 and V 3.1.0.** Each one was started headless first - mod loaded,
+Harmony patches applied, no errors, exceptions or XML problems - and then played: the
+controller row binds and survives "Reset to defaults", and the double tap fires.
+
+The dash itself was play-tested and tuned on **V 3.0.1 (b4)** in 1.0.4, and is unchanged since.
+Other 3.x builds are untested rather than unsupported; because the ability is a Harmony DLL,
+each release has to re-establish that list.
 
 A dash carries roughly **10 m on the flat** at the default force; the Force slider spans about
 6 m to 76 m if you want it shorter or sillier.
@@ -68,6 +76,8 @@ With Gears installed: **main menu or ESC ▸ Mods ▸ 7 Dashes to Die ▸ Dash**
 | Cooldown (s) | 1.5 | 0.2-10, step 0.1 | 1.5 |
 | Stamina cost | 10 | 0-50, step 1 | 10 |
 | Volume (%) | 100 | 0-100, step 5 | 100 |
+| Double tap to dash | Off | On / Off | Off |
+| Double tap window (ms) | 300 | 150-600, step 10 | 300 |
 | Log dash distance | Off | On / Off | Off |
 
 Values are read fresh on every dash, so moving a slider takes effect on the next one.
@@ -104,6 +114,15 @@ factor to fold into `ModelCorrection`.
   `PlayerActionSet.Actions` at runtime and groups each action by its `UserData`. There is no
   hardcoded list, so an action created in a postfix on `PlayerActionsLocal.CreateActions`
   appears in the Controls menu by itself, rebinding included.
+- **The controller button** - a separate list, not a flag on the same one.
+  `XUiC_OptionsController.createControlsEntries` never looks at `appliesToInputType`; it
+  enumerates the public field `PlayerActionsBase.ControllerRebindableActions`. So the dash is
+  appended to that too - and re-appended after `CreateDefaultJoystickBindings`, which clears
+  the list every time the player resets their controller bindings.
+- **The double tap** - the game's own `MoveForward/Back/Left/Right` actions are polled for
+  press → release → press inside the window, so it follows rebound keys. Measuring from the
+  first press rather than from the release is what keeps a long hold from counting as the
+  first half of a tap.
 - **The perk** - plain vanilla `progression.xml`. It carries no `passive_effect`:
   `PassiveEffects` is a fixed engine enum (`Count = 203`), so a mod cannot add one. The DLL
   reads the rank directly with `Progression.GetProgressionValue(...).Level`.

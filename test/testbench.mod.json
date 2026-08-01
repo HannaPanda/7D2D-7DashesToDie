@@ -1,0 +1,56 @@
+{
+  "modId": "sevendashestodie",
+  "displayName": "7 Dashes to Die",
+  "repo": "C:\\Users\\sourc\\7D2D-7DashesToDie",
+  "variants": [
+    {
+      "name": "Default",
+      "folder": "SevenDashesToDie",
+      "notes": "This mod has no editions - one folder for everything."
+    }
+  ],
+  "dependencies": [
+    "quartz",
+    "gears"
+  ],
+  "stage1": {
+    "harmonyPattern": "Harmony patches applied",
+    "requireHarmony": true,
+    "extraFatalPatterns": []
+  },
+  "stage2": {
+    "logFilter": "7 Dashes to Die|HarmonyException| EXC | ERR ",
+    "evidencePatterns": [
+      "dash key registered",
+      "dash added to the controller bindings list"
+    ],
+    "evidenceLabel": "Dash-Taste und Controller-Zeile im Log belegt",
+    "visualQuestion": "Controller-Zeile unter Options > Controller > On Foot da, belegbar und ueberlebt sie \"Reset to defaults\"? Und dasht ein Doppeltipp (Gears-Schalter an)?"
+  },
+  "profiles": [
+    {
+      "name": "matrix",
+      "variant": "Default",
+      "versions": [
+        "3.0.0",
+        "3.0.1",
+        "3.1.0"
+      ],
+      "stages": [
+        "headless"
+      ],
+      "notes": "Stage 1 on every supported build. Proves load/Harmony/XML, nothing else."
+    },
+    {
+      "name": "gui",
+      "variant": "Default",
+      "versions": [
+        "3.1.0"
+      ],
+      "stages": [
+        "gui"
+      ],
+      "notes": "Visual check on the newest build - the only stage that reaches menus and input."
+    }
+  ]
+}

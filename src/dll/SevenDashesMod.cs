@@ -40,6 +40,22 @@ namespace SevenDashesToDie
         public const float DefaultStaminaCost = 10f;
         public const float DefaultVolumePercent = 100f;
         public const bool DefaultDebugLog = false;
+        public const bool DefaultDoubleTap = false;
+
+        /// <summary>
+        /// Milliseconds allowed between the two presses of a double tap.
+        ///
+        /// 300 ms is the compromise, not a round number picked for looks. Windows' own
+        /// double-click default is 500 ms, which is far too slack here: a movement key is
+        /// held, released and re-pressed constantly during normal play, and at 500 ms
+        /// ordinary strafe corrections start dashing on their own. Competitive double-tap
+        /// dodges sit around 200-250 ms, which is reliable for someone who practises it and
+        /// frustrating for everyone else. 300 ms is comfortably reachable without aiming for
+        /// it, and still short enough that a deliberate walk-stop-walk does not trip it.
+        /// Players who get phantom dashes should come down to 200; players who cannot land
+        /// one should go up.
+        /// </summary>
+        public const float DefaultDoubleTapWindowMs = 300f;
 
         // Must match ModSettings.xml
         const string GearsTab = "SevenDashes";
@@ -50,7 +66,8 @@ namespace SevenDashesToDie
         static float nextRetryTime;
         static PropertyInfo currentValueProp;
         static object enabledSetting, requirePerkSetting, forceSetting,
-                      cooldownSetting, staminaSetting, volumeSetting, debugSetting;
+                      cooldownSetting, staminaSetting, volumeSetting, debugSetting,
+                      doubleTapSetting, doubleTapWindowSetting;
 
         public static bool Enabled { get { return ReadBool(enabledSetting, DefaultEnabled); } }
         public static bool RequirePerk { get { return ReadBool(requirePerkSetting, DefaultRequirePerk); } }
@@ -59,6 +76,11 @@ namespace SevenDashesToDie
         public static float StaminaCost { get { return ReadFloat(staminaSetting, DefaultStaminaCost); } }
         public static float Volume { get { return Mathf.Clamp01(ReadFloat(volumeSetting, DefaultVolumePercent) / 100f); } }
         public static bool DebugLog { get { return ReadBool(debugSetting, DefaultDebugLog); } }
+        public static bool DoubleTap { get { return ReadBool(doubleTapSetting, DefaultDoubleTap); } }
+        public static float DoubleTapWindowSeconds
+        {
+            get { return ReadFloat(doubleTapWindowSetting, DefaultDoubleTapWindowMs) / 1000f; }
+        }
 
         static string Read(object setting)
         {
@@ -162,6 +184,8 @@ namespace SevenDashesToDie
                 staminaSetting = getSetting.Invoke(category, new object[] { "StaminaCost" });
                 volumeSetting = getSetting.Invoke(category, new object[] { "Volume" });
                 debugSetting = getSetting.Invoke(category, new object[] { "DebugLog" });
+                doubleTapSetting = getSetting.Invoke(category, new object[] { "DoubleTap" });
+                doubleTapWindowSetting = getSetting.Invoke(category, new object[] { "DoubleTapWindow" });
                 currentValueProp = tValue.GetProperty("CurrentValue");
 
                 connected = true;

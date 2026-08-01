@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HarmonyLib;
 using InControl;
 
@@ -34,6 +35,23 @@ namespace SevenDashesToDie
     // There is no static route to Platform.PlayerInputManager, so the set is reached through
     // the two paths that do exist: the local player (in-game) and the options dialog's own
     // XUi chain (main menu).
+    //
+    // ⚠ THE CONTROLLER SCREEN IS A SEPARATE LIST. Options > Controls
+    // (XUiC_OptionsControls.createControlsEntries) walks PlayerActionSet.Actions and skips
+    // anything whose appliesToInputType is None or ControllerOnly - that is the keyboard
+    // screen. Options > Controller (XUiC_OptionsController.createControlsEntries) ignores
+    // appliesToInputType entirely and instead enumerates the public field
+    // PlayerActionsBase.ControllerRebindableActions. An action that is only in Actions gets
+    // a key row and no gamepad row. So the dash is put in BOTH, and:
+    //   - PlayerActionsLocal.CreateDefaultJoystickBindings CLEARS ControllerRebindableActions
+    //     before refilling it with the vanilla actions. It runs at startup (before mods, so
+    //     the postfix below is not what registers us the first time) and again on
+    //     ResetControllerBindings, i.e. every "Reset to defaults" in the controller options
+    //     would otherwise silently drop the dash row. Hence the postfix that re-adds it.
+    //   - the controller screen lays the list into a fixed grid of 22 XUiC_BindingEntry rows
+    //     per tab (Data/Config/XUi_Menu/templates.xml, options_bindings_tab), and vanilla
+    //     fills far fewer, so there is room. The row order is the list order, so appending
+    //     puts the dash at the end of "On Foot" - the same place it sits on the key screen.
     // ---------------------------------------------------------------------------------
     public static class DashInput
     {
@@ -43,6 +61,13 @@ namespace SevenDashesToDie
         // Default key. V is unbound in vanilla PlayerActionsLocal (checked against
         // CreateDefaultKeyboardBindings) and sits next to WASD.
         const Key DefaultKey = Key.V;
+
+        // No default gamepad button, deliberately. Every face button, bumper, trigger,
+        // stick click and d-pad direction except DPadRight is already taken by
+        // PlayerActionsLocal.CreateDefaultJoystickBindings, and claiming the one leftover
+        // would be worse than leaving the row empty: a dash bound over something the player
+        // did not ask for is a bug report, an empty row in Options > Controller is an
+        // invitation. The row is there, rebindable, from the first launch.
 
         static PlayerActionsLocal cachedOwner;
         static PlayerAction cachedAction;
@@ -75,6 +100,22 @@ namespace SevenDashesToDie
             cachedOwner = _input;
             cachedAction = created;
             return created;
+        }
+
+        /// <summary>
+        /// Get(), plus the controller screen's separate list. Kept off Get() itself because
+        /// Get() is on the per-frame dash path and this walks a list; the callers below are
+        /// the moments the list can actually have changed.
+        /// </summary>
+        public static void EnsureRegistered(PlayerActionsLocal _input)
+        {
+            PlayerAction action = Get(_input);
+            if (action == null) return;
+
+            List<PlayerAction> rebindable = _input.ControllerRebindableActions;
+            if (rebindable == null || rebindable.Contains(action)) return;
+            rebindable.Add(action);
+            Log.Out(SevenDashesMod.LogPrefix + "dash added to the controller bindings list (unbound by default).");
         }
 
         static PlayerAction Register(PlayerActionsLocal _input)
@@ -125,6 +166,22 @@ namespace SevenDashesToDie
             }
         }
 
+        /// <summary>Shared body of the two options-dialog hooks.</summary>
+        static void EnsureFromDialog(XUiController _dialog, string _which)
+        {
+            try
+            {
+                if (_dialog == null || _dialog.xui == null) return;
+                LocalPlayerUI ui = _dialog.xui.playerUI;
+                if (ui == null) return;
+                EnsureRegistered(ui.playerInput);
+            }
+            catch (Exception e)
+            {
+                Log.Error(SevenDashesMod.LogPrefix + _which + " dialog hook failed: " + e);
+            }
+        }
+
         // The main-menu path: Options > Controls is reachable without a loaded world, so the
         // local player cannot be relied on to have registered the action yet.
         [HarmonyPatch(typeof(XUiC_OptionsControls), "createControlsEntries")]
@@ -132,17 +189,18 @@ namespace SevenDashesToDie
         {
             static void Prefix(XUiC_OptionsControls __instance)
             {
-                try
-                {
-                    if (__instance == null || __instance.xui == null) return;
-                    LocalPlayerUI ui = __instance.xui.playerUI;
-                    if (ui == null) return;
-                    Get(ui.playerInput);
-                }
-                catch (Exception e)
-                {
-                    Log.Error(SevenDashesMod.LogPrefix + "controls dialog hook failed: " + e);
-                }
+                EnsureFromDialog(__instance, "controls");
+            }
+        }
+
+        // Same for Options > Controller. It is a sibling override, not the inherited base
+        // method, so patching XUiC_OptionsControlsBase would never fire for either screen.
+        [HarmonyPatch(typeof(XUiC_OptionsController), "createControlsEntries")]
+        static class Patch_XUiC_OptionsController_createControlsEntries
+        {
+            static void Prefix(XUiC_OptionsController __instance)
+            {
+                EnsureFromDialog(__instance, "controller");
             }
         }
 
@@ -154,6 +212,22 @@ namespace SevenDashesToDie
             static void Postfix(PlayerActionsLocal __instance)
             {
                 Get(__instance);
+            }
+        }
+
+        // "Reset to defaults" in Options > Controller ends up here, and this method starts by
+        // clearing ControllerRebindableActions. Without this postfix the dash row would
+        // vanish from the controller screen until the next restart.
+        [HarmonyPatch(typeof(PlayerActionsLocal), "CreateDefaultJoystickBindings")]
+        static class Patch_PlayerActionsLocal_CreateDefaultJoystickBindings
+        {
+            static void Postfix(PlayerActionsLocal __instance)
+            {
+                try { EnsureRegistered(__instance); }
+                catch (Exception e)
+                {
+                    Log.Error(SevenDashesMod.LogPrefix + "joystick binding hook failed: " + e);
+                }
             }
         }
     }

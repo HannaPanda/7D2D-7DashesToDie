@@ -126,11 +126,21 @@ namespace SevenDashesToDie
 
             ReportMeasurement(player);
 
-            // Check the key before touching Settings: this runs every frame, and every
+            // The double-tap tracker needs to see every frame, so it runs before the
+            // early-out. It is built to read no setting until a genuine second press lands.
+            int tapped = DashDoubleTap.Poll(player);
+            bool keyed = WasDashPressed(player);
+
+            // Check the input before touching Settings: this runs every frame, and every
             // settings read goes through reflection into Gears.
-            if (!WasDashPressed(player)) return;
+            if (!keyed && tapped < 0) return;
             if (!Settings.Enabled) return;
-            TryDash(player, fpc, grounded);
+
+            // A dash from the dash key follows wherever the player is currently steering; a
+            // dash from a double tap follows the key that was tapped, so that tapping A twice
+            // dodges left even while W is held.
+            Vector3 dir = keyed ? DashDirection(player) : DashDoubleTap.Direction(player, tapped);
+            TryDash(player, fpc, grounded, dir);
         }
 
         static void Reset(EntityPlayerLocal player)
@@ -170,8 +180,10 @@ namespace SevenDashesToDie
             return 0;
         }
 
-        static void TryDash(EntityPlayerLocal player, vp_FPController fpc, bool grounded)
+        static void TryDash(EntityPlayerLocal player, vp_FPController fpc, bool grounded, Vector3 dir)
         {
+            if (dir.sqrMagnitude < 0.001f) return;
+
             int rank = GetRank(player);
             if (rank <= 0) return;
 
@@ -182,9 +194,6 @@ namespace SevenDashesToDie
             float cost = Settings.StaminaCost;
             Stat stamina = player.Stats != null ? player.Stats.Stamina : null;
             if (cost > 0f && (stamina == null || stamina.Value < cost)) return;
-
-            Vector3 dir = DashDirection(player);
-            if (dir.sqrMagnitude < 0.001f) return;
 
             // The plain dash, unchanged: this is the impulse that play-tested well from a
             // standstill, and Momentum Lite only ever reduces it.
@@ -245,9 +254,23 @@ namespace SevenDashesToDie
 
             Vector3 local = new Vector3(move.x, 0f, move.y);
             if (local.sqrMagnitude < 0.04f) local = Vector3.forward; // below deadzone: straight ahead
+            return WorldDirection(player, local);
+
+            // ⚠ The flip is applied to the INPUT above, not to `local` here, and the two are
+            // not the same thing: with no input at all the fallback is "where you look",
+            // which must stay unflipped. Mirroring it would send a standing player backwards.
+        }
+
+        /// <summary>
+        /// A player-local direction (x = right, z = forward) turned into a flat world
+        /// direction. Entity.rotation is euler degrees; only the yaw matters for a flat dash.
+        /// </summary>
+        internal static Vector3 WorldDirection(EntityPlayerLocal player, Vector3 local)
+        {
+            local.y = 0f;
+            if (local.sqrMagnitude < 0.001f) return Vector3.zero;
             local.Normalize();
 
-            // Entity.rotation is euler degrees; only the yaw matters for a flat dash.
             Vector3 dir = Quaternion.Euler(0f, player.rotation.y, 0f) * local;
             dir.y = 0f;
             return dir.sqrMagnitude < 0.001f ? Vector3.zero : dir.normalized;
@@ -308,7 +331,7 @@ namespace SevenDashesToDie
         /// <summary>
         /// One passive effect for this player, with the same argument set MoveByInput uses.
         /// </summary>
-        static float Effect(EntityAlive player, PassiveEffects effect)
+        internal static float Effect(EntityAlive player, PassiveEffects effect)
         {
             return EffectManager.GetValue(effect, null, 0f, player, null,
                                           default(FastTags<TagGroup.Global>),

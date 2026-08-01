@@ -45,8 +45,23 @@ No console command, no free ability at level one. [b]Rule 2: Double Tap[/b] sits
 
 [quote]Not an Agility build this run? Turn [b]Require perk[/b] off in the settings and you get the full ability without spending a point.[/quote]
 
-[size=5][b][color=#4fc3f7]Your key, your binding[/color][/b][/size]
-The dash key is registered with the game's own input system, so you rebind it exactly where you would expect: [i]Options ▸ Controls ▸ Movement[/i], in the [i]Player movement[/i] group, right below Jump and Crouch. Default is [b]V[/b]. Controller bindings work too.
+[size=5][b][color=#4fc3f7]Your key, your binding - and your controller[/color][/b][/size]
+The dash is registered with the game's own input system, so you rebind it exactly where you would expect: [i]Options ▸ Controls ▸ Movement[/i], in the [i]Player movement[/i] group, right below Jump and Crouch. Default is [b]V[/b].
+
+[b]On a controller[/b] it has its own row under [i]Options ▸ Controller ▸ On Foot[/i], rebindable like any vanilla one. It ships [b]unbound[/b] on purpose: vanilla already uses every face button, bumper, trigger, stick click and d-pad direction bar one, and silently stealing the last free one would be a worse surprise than an empty row. Bind it to whatever you actually have spare.
+
+[quote]This is new in [b]1.1.0[/b]. Earlier versions had a keyboard row only - the controller screen in 7DTD reads a completely separate list, which is not something you find out until someone with a gamepad tells you. Thank you to the player who did.[/quote]
+
+[size=5][b][color=#4fc3f7]Or just tap twice[/color][/b][/size]
+The perk is called [i]Double Tap[/i], so as of 1.1.0 you can actually do that: [b]tap a movement key twice and you dash that way[/b]. Double-tap A and you dodge left, even if you are holding W at the time.
+
+It is [b]off by default[/b], because a mis-read tap costs you stamina and moves you somewhere you did not ask to go - that should be a choice, not a surprise. Turn it on in the settings, and tune the window if it does not fit your hands:
+[list]
+[*][b]300 ms[/b] (the default) - reachable without aiming for it, still tight enough that normal walking does not trip it.
+[*][b]Lower it toward 150[/b] if dashes start firing on their own while you strafe.
+[*][b]Raise it toward 600[/b] if you keep trying and nothing happens.
+[/list]
+The dash key still works exactly as before. This is a second way in, not a replacement - and a double tap costs the same stamina and obeys the same cooldown, so it is not the cheap option either.
 
 [center][img]https://raw.githubusercontent.com/HannaPanda/7D2D-7DashesToDie/refs/heads/main/nexus/images/DashKey.jpg[/img][/center]
 
@@ -59,6 +74,8 @@ With [url=https://www.nexusmods.com/7daystodie/mods/4017][b]Gears[/b][/url] inst
 [*][b]Cooldown[/b] - 0.2 to 10 seconds. Higher perk ranks shorten it further.
 [*][b]Stamina cost[/b] - 0 to 50. Set it to 0 for a free dash.
 [*][b]Volume[/b] - 0 to 100%, on top of your normal game volume.
+[*][b]Double tap to dash[/b] - off by default. Tap a movement key twice to dash that way.
+[*][b]Double tap window[/b] - 150 to 600 ms, default 300. How close together the two taps have to be.
 [/list]
 Settings are read on every dash, so a slider you move now takes effect on the next one. [b]No restart, no new save.[/b]
 
@@ -70,7 +87,7 @@ Settings are read on every dash, so a slider you move now takes effect on the ne
 
 [size=5][b][color=#4fc3f7]Requirements[/color][/b][/size]
 [list]
-[*][b]Tested on V 3.0.1 (b4).[/b] That is the only build this version was actually launched on and checked. Other 3.x builds are [i]untested[/i], not known-broken - the whole ability is a Harmony DLL, so every release has to re-earn that list. If you run it on another build, I would like to hear how it went.
+[*][b]Tested on V 3.0.0, V 3.0.1 and V 3.1.0.[/b] Each one was launched with the mod installed and the log checked - no errors, no exceptions - and then actually played: the controller row binds and survives a controller reset, and the double tap fires. The dash itself was play-tested and tuned on [b]V 3.0.1 (b4)[/b]. Other 3.x builds are [i]untested[/i], not known-broken - the whole ability is a Harmony DLL, so every release has to re-earn that list. If you run it on another build, I would like to hear how it went.
 [*][b]EasyAntiCheat must be off.[/b] This mod ships a Harmony DLL. Single-player and private servers.
 [*][url=https://www.nexusmods.com/7daystodie/mods/4017][b]Gears[/b][/url] - [b]optional[/b], only for the settings menu. Gears itself needs Quartz.
 [*][b]Multiplayer:[/b] install it on the client for the ability, and on the server as well so the perk exists in the skill tree.
@@ -87,7 +104,7 @@ Settings are read on every dash, so a slider you move now takes effect on the ne
 Adding it mid-save is fine. [b]Removing it is safe too[/b], with one caveat worth knowing: the perk disappears from the skill tree, and any points you spent on it are gone with it. That is how 7 Days to Die handles a removed perk, not something this mod can prevent. Nothing else is touched - no blocks, no items, no recipes, no entities.
 
 [size=5][b][color=#4fc3f7]Performance[/color][/b][/size]
-One Harmony postfix on the local player's update, which reads a key state and returns. The dash itself hands a single impulse to the movement controller the game already runs. No new objects, no polling, no extra physics.
+One Harmony postfix on the local player's update, which reads a handful of key states and returns. The dash itself hands a single impulse to the movement controller the game already runs. No new objects, no extra physics. The double-tap tracker is four booleans and four timestamps, and it does not touch the settings until a second tap actually lands.
 
 [size=5][b][color=#4fc3f7]Honest notes[/color][/b][/size]
 [list]
