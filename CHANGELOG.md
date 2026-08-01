@@ -69,7 +69,7 @@ same force, same cooldown, same ranks.
 
 Play-tested tuning pass. First release whose numbers come from measurement rather than estimate.
 
-- **The dash is now about a quarter as strong.** `BaseForceFactor` 2.2 -> 0.88. The old
+- **The dash is now 40% as strong.** `BaseForceFactor` 2.2 -> 0.88. The old
   value carried ~25 m from a standstill in 0.8 s - a whole street. Dialling the in-game
   Force slider found 33% short and 40% right, so that setting is now the default and the
   slider reads 100% again. Expect roughly 10 m on the flat.
