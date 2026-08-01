@@ -98,6 +98,10 @@ reported. The description's AI disclosure section carries the same statement.
 - The `▸` in menu paths is likewise a plain character.
 - Tags used: `size, b, i, color, center, url, img, list, list=1, quote`. All standard, but
   **use the Nexus preview before saving**: the exact tag support is not publicly documented.
+- The **Changelog** section is a player-facing retelling of `CHANGELOG.md`, not a copy: it
+  keeps what a player notices or has to act on (the 250% note for 1.0.4, "off by default"
+  for 1.1.0) and drops the Harmony and IL reasoning, which belongs in the repo. Add the new
+  version at the top on every release; the "Full history" link carries the rest.
 - Keep this file in sync when defaults or settings change. It duplicates numbers from
   `SevenDashesToDie/ModSettings.xml` and `src/dll/SevenDashesMod.cs` on purpose, since the
   mod page cannot read them.
