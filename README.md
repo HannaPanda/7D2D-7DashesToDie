@@ -24,7 +24,8 @@ A **dash**, an **air dash** and a **double air dash**, unlocked through a new Ag
 
 **Tested on V 3.0.0, V 3.0.1 and V 3.1.0.** Each one was started headless first - mod loaded,
 Harmony patches applied, no errors, exceptions or XML problems - and then played: the
-controller row binds and survives "Reset to defaults", and the double tap fires.
+controller row binds and survives "Reset to defaults", and the double tap fires. For 1.1.1
+each build was additionally started **with a binding already saved**, and restored it.
 
 The dash itself was play-tested and tuned on **V 3.0.1 (b4)** in 1.0.4, and is unchanged since.
 Other 3.x builds are untested rather than unsupported; because the ability is a Harmony DLL,

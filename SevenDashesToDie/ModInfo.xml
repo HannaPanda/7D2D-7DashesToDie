@@ -4,7 +4,7 @@
 	<DisplayName value="7 Dashes to Die" />
 	<Description value="Adds a dash, an air dash and a double air dash, unlocked through the Agility perk 'Rule 2: Double Tap'. Force, cooldown and stamina cost are configurable in the Gears mod settings menu when Gears is installed." />
 	<Author value="hannapanda" />
-	<Version value="1.1.0.0" compat="3.0" />
+	<Version value="1.1.1.0" compat="3.0" />
 	<Website value="https://github.com/HannaPanda/7D2D-7DashesToDie" />
 	<SkipWithAntiCheat value="false" />
 </xml>

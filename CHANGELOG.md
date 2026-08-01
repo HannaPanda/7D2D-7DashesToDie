@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.1.1 - 2026-08-01
+
+Bugfix. **Your dash binding survives a restart now** - reported for the controller button,
+but the keyboard key had the same hole.
+
+- **The saved binding is applied before mods load, so the dash never got its own back.**
+  `GameManager.Awake` calls `GameOptionsControls.Load()` long before `ModManager.LoadMods()`,
+  and `PlayerActionSet.LoadData` silently skips any saved entry whose action does not exist
+  yet - which the dash, created lazily, never does at that point. Saving always worked; the
+  data was on disk the whole time, it just never came back. The mod now replays that same
+  saved blob once, right after it creates the action.
+  - Only done when the blob actually contains the dash entry, so a player who never rebound
+    it never has their action set reloaded at all.
+  - Keyboard and gamepad bindings share one entry, so both are restored. The keyboard side
+    looked fine to anyone who left it on the default `V` and was quietly resetting for
+    everyone else.
+  - The log now names what came back: `restored the saved dash binding from 'ActionSet_local'`
+    followed by the bindings, so the next report of a lost key is one grep away.
+- **Verified on V 3.0.0 (b259), V 3.0.1 (b4) and V 3.1.0 (b14).** Headless first (mod loaded,
+  Harmony patches applied, 0 errors / 0 exceptions / 0 XML problems on each), then started
+  with a binding already saved - all three restored it, keyboard and gamepad together.
+
 ## 1.1.0 - 2026-07-31
 
 Two ways to ask for a dash that were not there before. The ability itself is untouched -

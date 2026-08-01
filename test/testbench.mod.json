@@ -22,10 +22,11 @@
     "logFilter": "7 Dashes to Die|HarmonyException| EXC | ERR ",
     "evidencePatterns": [
       "dash key registered",
-      "dash added to the controller bindings list"
+      "dash added to the controller bindings list",
+      "restored the saved dash binding"
     ],
-    "evidenceLabel": "Dash-Taste und Controller-Zeile im Log belegt",
-    "visualQuestion": "Controller-Zeile unter Options > Controller > On Foot da, belegbar und ueberlebt sie \"Reset to defaults\"? Und dasht ein Doppeltipp (Gears-Schalter an)?"
+    "evidenceLabel": "Dash-Taste, Controller-Zeile und Wiederherstellung der gespeicherten Belegung im Log belegt",
+    "visualQuestion": "Steht die Controller-Belegung schon drin, ohne dass du sie neu setzt? Und: Zeile unter Options > Controller > On Foot da, belegbar, ueberlebt \"Reset to defaults\"? Dasht ein Doppeltipp (Gears-Schalter an)?"
   },
   "profiles": [
     {

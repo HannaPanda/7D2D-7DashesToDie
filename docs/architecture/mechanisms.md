@@ -170,7 +170,7 @@ InControl does with a set tolerates that:
 |---|---|
 | `CreatePlayerAction` | Body is exactly `new PlayerAction(name, this)` - no initialisation guard, callable at any point. |
 | `Actions` | A `ReadOnlyCollection` wrapping the live `actions` list, assigned once in the ctor, so a late action does appear in it. |
-| `LoadData` | Looks each saved name up via `actionsByName.TryGetValue` and skips misses, so bindings saved before this mod existed load fine and the new action keeps its default. |
+| `LoadData` | Looks each saved name up via `actionsByName.TryGetValue` and skips misses, so bindings saved before this mod existed load fine and the new action keeps its default. **The same skip is what loses the dash's own saved binding - see §2a.** |
 | `AddPlayerAction` | **Throws `InControlException` on a duplicate name** - so look the action up before creating it. |
 
 There is no static route to `Platform.PlayerInputManager` (checked: no static field or method
@@ -194,6 +194,64 @@ against them; it is unbound in that set.
 
 **Caveat:** InControl serialises bindings by action name, so changing
 `DashInput.ActionName` resets every user's key.
+
+---
+
+## 2a. A late action loses its saved binding on every launch
+
+Being created lazily buys the menu entry (§2) and costs the persistence, and 1.1.0 paid that
+price without noticing. Reported symptom: *"After every restart of the game, I have to bind
+the key to controller again, it doesn't save between sessions."*
+
+**Saving was never the problem.** `XUiC_OptionsControlsBase.afterChangesSaved` →
+`GameOptionsControls.Save()` walks `PlayerActionSet.actions` - which contains the dash by then
+- and writes one base64 blob per action set into `SdPlayerPrefs`, keyed
+`GameOptionsControls.cActionSetSavePrefix + set.Name`, i.e. `ActionSet_local`. Decoding that
+value out of `HKCU\Software\The Fun Pimps\7 Days To Die` shows the dash entry with its
+bindings, exactly as saved.
+
+**Loading is.** `GameManager.Awake` does both of these, in this order, in that one method:
+
+| IL offset in `GameManager.Awake` | Call |
+|---|---|
+| `IL_0123` | `GameOptionsControls.Load()` - reads each `ActionSet_*` blob into `PlayerActionSet.Load` |
+| `IL_035d` | `ModManager.LoadMods()` |
+
+`PlayerActionSet.LoadData` resolves every saved entry through `actionsByName.TryGetValue` and
+**skips misses**. At `IL_0123` the mod does not exist, so the dash's saved entry is read,
+matched against nothing, and dropped. Then the mod loads, the action is created, and
+`AddDefaultBinding` gives it `V` and no gamepad button. Every launch, silently - a skipped
+entry is the *normal* case for a binding written by a build that has since removed the action,
+so InControl logs nothing.
+
+Measured on 3.0.1 (`output_log_client__2026-08-01__12-31-10.txt`):
+
+| | Time |
+|---|---|
+| `INF Awake` (so `GameOptionsControls.Load()` a few ms later) | **9.06 s** |
+| `Loaded assembly SevenDashesToDie` | **10.13 s** |
+| `Harmony patches applied` | **19.67 s** |
+| `dash key registered (default V)` - first actual use | **187.46 s** |
+
+No hook can be early enough: at `IL_0123` the patches do not exist yet, so patching
+`GameOptionsControls.Load` itself would not fire either.
+
+**The fix - replay the blob once, after the action exists.** `DashInput.RestoreSavedBindings`
+runs at the end of `Register()`: read `SdPlayerPrefs.GetString("ActionSet_" + set.Name)` and
+hand it back to `PlayerActionSet.Load`. That is the game's own call with the game's own string,
+so the binary format stays TFP's problem. Two limits are deliberate:
+
+- **Only when the blob names our action.** `PlayerAction.Save` writes the name with
+  `BinaryWriter.Write(string)` (7-bit length prefix, then raw UTF-8), so a byte search of the
+  decoded blob answers it. A player who never rebound the dash never has their set touched.
+- **`PlayerActionSet.Load` falls back to `Reset()`** - every action in the set to defaults - if
+  the blob does not parse. Accepted, because it is the exact string the game itself parsed
+  successfully seconds to minutes earlier in the same session.
+
+**Both bindings live in that one blob under the one action name**, so this restores keyboard
+and gamepad together. Only the gamepad side was ever reported because the keyboard side
+resets to `V`, which is what most players have anyway; anyone who moved it off `V` was losing
+that too.
 
 ---
 

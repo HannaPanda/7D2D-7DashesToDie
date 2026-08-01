@@ -103,10 +103,11 @@ jobs:
             Optionally triggered by tapping a movement key twice. A dash carries roughly 10 m;
             the in-game Force slider spans ~6 m to ~75 m.
 
-            **Tested on: V 3.0.0, V 3.0.1 (b4) and V 3.1.0.** Each was started headless with
-            the mod installed and the log checked, and then played: the controller row binds
-            and survives a controller reset, and the double tap fires. Other 3.x builds are
-            untested rather than unsupported. Since the whole ability lives in a Harmony DLL,
+            **Tested on: V 3.0.0 (b259), V 3.0.1 (b4) and V 3.1.0 (b14).** Each was started
+            headless with the mod installed and the log checked, and then played: the
+            controller row binds and survives a controller reset, and the double tap fires.
+            Each was also started **with a binding already saved**, and restored it - the
+            thing this release fixes. Other 3.x builds are untested rather than unsupported. Since the whole ability lives in a Harmony DLL,
             every release has to re-establish that list from scratch.
 
             - Requires EasyAntiCheat **off** (Harmony DLL).

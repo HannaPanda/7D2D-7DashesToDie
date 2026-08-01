@@ -28,6 +28,15 @@ Play-tested on 7DTD 3.0.1 as of 1.0.4. `BaseForceFactor` (0.88, ~10 m per dash) 
 treat them as data and re-measure rather than re-guess. Every API claim in `docs/` was read
 out of the installed `Assembly-CSharp.dll`.
 
+1.1.1 (saved binding survives a restart) passed **both stages on 3.0.0, 3.0.1 and 3.1.0**
+(2026-08-01). Scope of that, stated plainly so nobody re-derives it later: all three were
+started with a binding already in `ActionSet_local` and logged
+`restored the saved dash binding ... : Backslash, Action2`, which is the fix itself. The
+**menu** half - controller row present, bindable, surviving "Reset to defaults" - was looked
+at on **3.1.0 only**; for 3.0.0 and 3.0.1 Johanna carried it over from 1.1.0 by decision,
+because that code path is unchanged and a per-version divergence with an identical DLL is not
+a real risk. If a later change touches `DashInput`'s menu registration, that shortcut expires.
+
 1.1.0 (controller button + optional double tap) passed **both stages on 3.0.0, 3.0.1 and
 3.1.0** (2026-08-01: row binds, survives "Reset to defaults", double tap fires on each).
 `tb report --mod seven` is the authority on that list - it names only versions where both
