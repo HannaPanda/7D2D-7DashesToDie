@@ -134,55 +134,6 @@ jobs:
         id: ver
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Build mini changelog
-        id: notes
-        run: |
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import os, re, textwrap
-          version = os.environ["GITHUB_REF_NAME"].lstrip("v")
-          blurb = ("A dash, an air dash and a double air dash for 7 Days to Die V3.4, "
-                   "unlocked through the Agility perk Rule 2: Double Tap. Default key V, "
-                   "rebindable in the game's own Controls menu. Requires EasyAntiCheat off. "
-                   "Gears 8 is optional and adds in-game settings for force, cooldown, stamina "
-                   "cost and volume.")
-          bullets = []
-          try:
-              text = open("CHANGELOG.md", encoding="utf-8").read()
-              m = re.search(rf"^## {re.escape(version)}\b.*?$(.*?)(?=^## |\Z)",
-                            text, re.M | re.S)
-              if m:
-                  section = m.group(1)
-                  # Fold continuation lines. The bullet test needs the whitespace after the
-                  # marker: without it a wrapped line starting with bold (**Rule 2**) looks
-                  # like a new bullet and the fold silently splits it in two.
-                  raw = re.sub(r"\n(?!\s*[-*]\s)", " ", section)
-                  for line in raw.splitlines():
-                      line = line.strip()
-                      if not line.startswith(("-", "*")):
-                          continue
-                      line = re.sub(r"^[-*]\s+", "", line)
-                      # Strip markdown emphasis but NOT underscores: identifiers like
-                      # vp_FPController and passive_effect appear in these bullets.
-                      line = re.sub(r"[`*]", "", line)
-                      line = re.sub(r"\s+", " ", line).strip()
-                      if len(line) > 180:
-                          cut = line[:180].rfind(". ")
-                          line = line[:cut + 1] if cut > 40 else line[:180].rstrip() + "..."
-                      bullets.append("- " + line)
-                      if len(bullets) == 6:
-                          break
-          except FileNotFoundError:
-              pass
-          body = blurb
-          if bullets:
-              body += "\n\nWhat's new in " + version + ":\n" + "\n".join(bullets)
-          body += ("\n\nFull changelog: " + os.environ["GITHUB_SERVER_URL"] + "/"
-                   + os.environ["GITHUB_REPOSITORY"] + "/blob/main/CHANGELOG.md")
-          print("description<<EOF")
-          print(body)
-          print("EOF")
-          PY
-
       # The mod page's Changelogs tab gets this version's CHANGELOG.md bullets in full,
       # one entry per line. The Nexus endpoint only appends, so re-running a tag adds the
       # same lines a second time. No section for this version -> nothing is posted.
@@ -231,7 +182,12 @@ jobs:
           # Appends this version's CHANGELOG.md bullets to the Changelogs tab.
           mod_id: ${{ env.NEXUS_MOD_UID }}
           changelog: ${{ steps.clentries.outputs.entries }}
-          description: ${{ steps.notes.outputs.description }}
+          # Nexus rejects a file description over 255 characters (422). What changed goes
+          # to the Changelogs tab via `changelog`, so this stays a short summary.
+          description: >-
+            Dash, air dash and double air dash, unlocked by the Agility perk Rule 2: Double Tap.
+            Default key V. Built for V 3.4, Gears 8 optional. EasyAntiCheat must be off.
+            Changelog: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}
 
       # The mod page description is nexus/description.bbcode, sent as is. Nexus stores it
       # exactly as if it had been saved in the website editor (v3 editMod), so the repo
