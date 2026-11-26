@@ -127,7 +127,7 @@ binaries on `PATH` from `E:\7DTD-Testbench\bin`). This repo's half of the setup 
 
 ```
 tb doctor --json                              # before blaming the mod
-tb run --mod seven --profile matrix --json    # stage 1, all three versions
+tb run --mod seven --profile matrix --json    # stage 1, on 3.4.0
 tb report --mod seven --json                  # matrix + the TESTED_VERSIONS line
 ```
 

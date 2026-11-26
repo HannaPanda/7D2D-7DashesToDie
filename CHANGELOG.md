@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 - 2026-11-26
+
+7DTD 3.4 and Gears 8. The dash itself is untouched - same force, same cooldown, same ranks.
+
+For modders: Gears 8 only loads `<ModSettings version="2">` (a V1 file is skipped with an
+`ERR [Gears] ... V1 schema` line), and its `IGlobalValueSetting` is generic, so the old
+`CurrentValue` lookup finds nothing. The reader now takes the typed `SettingValue` off the
+concrete setting class instead. Details in `docs/conventions/modding.md`.
+
+- **Built for V 3.4 and tested on V 3.4.0 (b10).**
+- **The Gears settings page is back.** Gears 8, the version for 7DTD 3.4, could not read the
+  mod's settings, so the page was missing and the dash quietly ran on its defaults.
+- **If you use Gears, update it to version 8.** Every setting works again and still takes
+  effect on the next dash.
+
 ## 1.1.1 - 2026-08-01
 
 Bugfix. **Your dash binding survives a restart now** - reported for the controller button,

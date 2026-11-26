@@ -1,10 +1,10 @@
-# AGENTS.md - 7 Dashes to Die (7 Days to Die V3.0 mod)
+# AGENTS.md - 7 Dashes to Die (7 Days to Die V3.4 mod)
 
 Onboarding for AI agents working on this repo. Read this first.
 
 ## What this project is
 
-A movement mod for **7 Days to Die V3.0**: a dash, an air dash and a double air dash,
+A movement mod for **7 Days to Die V3.4**: a dash, an air dash and a double air dash,
 unlocked through a new Agility perk (**Rule 2: Double Tap**). Several things make it more
 than a keybind:
 
@@ -23,23 +23,15 @@ than a keybind:
 
 ## Status
 
-Play-tested on 7DTD 3.0.1 as of 1.0.4. `BaseForceFactor` (0.88, ~10 m per dash) and
+Tuned from play-testing in 1.0.4. `BaseForceFactor` (0.88, ~10 m per dash) and
 `ModelCorrection` (1.74) are both **measured** values from logged runs, not estimates -
 treat them as data and re-measure rather than re-guess. Every API claim in `docs/` was read
 out of the installed `Assembly-CSharp.dll`.
 
-1.1.1 (saved binding survives a restart) passed **both stages on 3.0.0, 3.0.1 and 3.1.0**
-(2026-08-01). Scope of that, stated plainly so nobody re-derives it later: all three were
-started with a binding already in `ActionSet_local` and logged
-`restored the saved dash binding ... : Backslash, Action2`, which is the fix itself. The
-**menu** half - controller row present, bindable, surviving "Reset to defaults" - was looked
-at on **3.1.0 only**; for 3.0.0 and 3.0.1 Johanna carried it over from 1.1.0 by decision,
-because that code path is unchanged and a per-version divergence with an identical DLL is not
-a real risk. If a later change touches `DashInput`'s menu registration, that shortcut expires.
-
-1.1.0 (controller button + optional double tap) passed **both stages on 3.0.0, 3.0.1 and
-3.1.0** (2026-08-01: row binds, survives "Reset to defaults", double tap fires on each).
-`tb report --mod seven` is the authority on that list - it names only versions where both
+**Only the current game version is supported: 3.4 (3.4.0, b10).** 1.2.0 is the 3.4 / Gears 8
+release and was play-tested in-game by Johanna on 3.4.0. Older builds are not maintained or
+re-tested; the testbench profiles cover 3.4.0 only.
+`tb report --mod seven` is the authority on the tested list - it names only versions where both
 stages passed *for the current mod version*, and **any DLL change empties it again**. Do not
 widen it by hand from headless results.
 

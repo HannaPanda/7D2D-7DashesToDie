@@ -1,4 +1,4 @@
-# 7 Dashes to Die - 7 Days to Die (V3.0)
+# 7 Dashes to Die - 7 Days to Die (V3.4)
 
 A **dash**, an **air dash** and a **double air dash**, unlocked through a new Agility perk:
 **Rule 2: Double Tap**.
@@ -22,14 +22,7 @@ A **dash**, an **air dash** and a **double air dash**, unlocked through a new Ag
 
 ## Status
 
-**Tested on V 3.0.0, V 3.0.1 and V 3.1.0.** Each one was started headless first - mod loaded,
-Harmony patches applied, no errors, exceptions or XML problems - and then played: the
-controller row binds and survives "Reset to defaults", and the double tap fires. For 1.1.1
-each build was additionally started **with a binding already saved**, and restored it.
-
-The dash itself was play-tested and tuned on **V 3.0.1 (b4)** in 1.0.4, and is unchanged since.
-Other 3.x builds are untested rather than unsupported; because the ability is a Harmony DLL,
-each release has to re-establish that list.
+**Built for V 3.4 and tested on V 3.4.0 (b10).**
 
 A dash carries roughly **10 m on the flat** at the default force; the Force slider spans about
 6 m to 76 m if you want it shorter or sillier.
@@ -38,8 +31,8 @@ A dash carries roughly **10 m on the flat** at the default force; the Force slid
 
 - **EasyAntiCheat must be OFF** - this mod ships a Harmony DLL. Works in single-player and
   on private servers.
-- **[Gears](https://www.nexusmods.com/7daystodie/mods/4017)** - *optional*, only needed for
-  the in-game settings menu.
+- **[Gears](https://www.nexusmods.com/7daystodie/mods/4017) 8** - *optional*, only needed
+  for the in-game settings menu. Gears itself needs Quartz.
 - **Multiplayer:** install on the client for the ability, and on the server too, so the perk
   exists in the skill tree. Movement in 7DTD is client-authoritative, so the dash itself
   works from the client; other players see it as fast movement, not as an impulse.
