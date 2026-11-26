@@ -35,7 +35,7 @@ Never hand-edit `SevenDashesToDie/Config/Localization.csv`.
 
 ## Deploy to the live modlist
 
-MO2 "Smorgasbord": `C:\Modlists\Smorgasbord\mods\7 Dashes to Die\SevenDashesToDie\`.
+MO2 "Smorgasbord": `C:\Modlists\Smorgasbord-3.4\mods\[NoDelete]7 Dashes to Die\SevenDashesToDie\`.
 The repo's `SevenDashesToDie/` folder mirrors that path one-to-one - keep them in sync.
 
 ## Test

@@ -73,7 +73,7 @@ the matching `docs/` file in the same commit.
   `LogLibrary.dll` and `InControl.dll` under `7DaysToDie_Data\Managed\`, Harmony under
   `Mods\0_TFP_Harmony\`.
 - **Live deployment** (MO2 "Smorgasbord" modlist):
-  `C:\Modlists\Smorgasbord\mods\7 Dashes to Die\SevenDashesToDie\`
+  `C:\Modlists\Smorgasbord-3.4\mods\[NoDelete]7 Dashes to Die\SevenDashesToDie\`
   - this is the running copy; the repo's `SevenDashesToDie/` mirrors it. **Keep them in sync.**
   - MO2 maps the *contents* of `mods\7 Dashes to Die\` into the game Mods folder, which is
     why the real mod sits one level down. The live tree also has a `meta.ini`; it belongs in
@@ -110,7 +110,8 @@ the matching `docs/` file in the same commit.
 4. **Settings** - `Settings.EnsureGears` finds the `GearsAPI` assembly in
    `AppDomain.CurrentDomain.GetAssemblies()` and walks
    `GearsSettingsManager.GetGearsMod(name) → GlobalSettings → GetTab → GetCategory →
-   GetSetting`, reading `IGlobalValueSetting.CurrentValue`. The tab/category/setting names
+   GetSetting`, reading `IGlobalValueSetting.CurrentValue` on Gears 7 and the typed
+   `SettingValue` on Gears 8 (see `docs/conventions/modding.md`). The tab/category/setting names
    must match `SevenDashesToDie/ModSettings.xml`, and the mod name must match
    `ModInfo.xml`'s `<Name>`.
 

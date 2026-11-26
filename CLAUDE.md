@@ -7,7 +7,7 @@ Project context and workflows for this repo live in **[AGENTS.md](AGENTS.md)** -
 ## Quick reminders for Claude Code
 
 - This is a **7 Days to Die V3.0** mod. The repo mirrors a live MO2 deployment at
-  `C:\Modlists\Smorgasbord\mods\7 Dashes to Die\SevenDashesToDie\` - keep them in sync.
+  `C:\Modlists\Smorgasbord-3.4\mods\[NoDelete]7 Dashes to Die\SevenDashesToDie\` - keep them in sync.
 - Prefer the **`7d2d-modding` skill** for any engine/API question; it interrogates the real
   `Assembly-CSharp.dll` instead of guessing, and its `LEARNINGS.md` records the traps.
 - Before deploying the DLL, make sure 7DTD is **not running** (it locks the file).

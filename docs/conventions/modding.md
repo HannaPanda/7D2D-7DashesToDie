@@ -47,8 +47,18 @@ Two of these are traps rather than choices:
 - The mod is keyed by `ModInfo.xml`'s `<Name>` (`SevenDashesToDie`) - not the folder name and
   not `DisplayName`. That is why `<Name>` is the technical identifier and `<DisplayName>`
   carries the "7 Dashes to Die" wordplay.
-- Every control exposes its value as a **string** through `IGlobalValueSetting.CurrentValue`,
-  so parse defensively and fall back to the C# default.
+- **Gears 8 (shipped with Smorgasbord for 7DTD 3.4) only loads `<ModSettings version="2">`.**
+  A file without the attribute is skipped with an `ERR [Gears] ... V1 schema` line, and the
+  menu simply does not appear. V2 differences: every control needs `type` (`bool`, `int`,
+  `float`, `string`), tooltips move into a `<Description key="..."/>` child, slider ranges
+  into `<Incremental increment= minValue= maxValue=/>`, selector values into
+  `<List allowedValues="..."/>`. Parser: `Gears.SettingsManager.Settings.XmlLoading.XmlSettingsParserV2`.
+- How the value is read depends on the Gears version. Up to Gears 7 every control exposes a
+  **string** through `IGlobalValueSetting.CurrentValue`. In Gears 8 that interface is generic
+  (`IGlobalValueSetting<T>`), so `GetType("...IGlobalValueSetting")` returns null; the reader
+  then takes the typed public `SettingValue` off the concrete setting class and formats it
+  with the invariant culture. Both paths end in the same string parsing, so parse defensively
+  and fall back to the C# default.
 - Gears itself requires **Quartz**.
 
 ## Progression XML

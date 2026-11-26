@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
@@ -65,6 +67,11 @@ namespace SevenDashesToDie
         static bool gearsMissing;
         static float nextRetryTime;
         static PropertyInfo currentValueProp;
+        // Gears 8 made the value interface generic (IGlobalValueSetting<T>), so there is no
+        // CurrentValue to look up any more. Every Gears 8 value setting has a public typed
+        // SettingValue on its concrete class instead; cached per setting because this is
+        // read from a per-frame path.
+        static readonly Dictionary<object, PropertyInfo> settingValueProps = new Dictionary<object, PropertyInfo>();
         static object enabledSetting, requirePerkSetting, forceSetting,
                       cooldownSetting, staminaSetting, volumeSetting, debugSetting,
                       doubleTapSetting, doubleTapWindowSetting;
@@ -85,8 +92,21 @@ namespace SevenDashesToDie
         static string Read(object setting)
         {
             EnsureGears();
-            if (setting == null || currentValueProp == null) return null;
-            try { return currentValueProp.GetValue(setting, null) as string; }
+            if (setting == null) return null;
+            try
+            {
+                if (currentValueProp != null) return currentValueProp.GetValue(setting, null) as string;
+
+                PropertyInfo p;
+                if (!settingValueProps.TryGetValue(setting, out p))
+                {
+                    p = setting.GetType().GetProperty("SettingValue", BindingFlags.Public | BindingFlags.Instance);
+                    settingValueProps[setting] = p;
+                }
+                if (p == null) return null;
+                object v = p.GetValue(setting, null);
+                return v == null ? null : Convert.ToString(v, CultureInfo.InvariantCulture);
+            }
             catch (Exception e)
             {
                 Log.Warning(SevenDashesMod.LogPrefix + "could not read Gears setting: " + e.Message);
@@ -142,9 +162,10 @@ namespace SevenDashesToDie
                 Type tGlobal = gearsApi.GetType("GearsAPI.Settings.Global.IModGlobalSettings");
                 Type tTab = gearsApi.GetType("GearsAPI.Settings.Global.IGlobalModSettingsTab");
                 Type tCategory = gearsApi.GetType("GearsAPI.Settings.Global.IGlobalModSettingsCategory");
+                // Gears 7 and older only; null on Gears 8, where Read() uses SettingValue.
                 Type tValue = gearsApi.GetType("GearsAPI.Settings.Global.IGlobalValueSetting");
                 if (tManager == null || tGearsMod == null || tGlobal == null ||
-                    tTab == null || tCategory == null || tValue == null)
+                    tTab == null || tCategory == null)
                 {
                     gearsMissing = true;
                     Log.Warning(SevenDashesMod.LogPrefix + "GearsAPI found but its types did not resolve - using defaults.");
@@ -186,7 +207,7 @@ namespace SevenDashesToDie
                 debugSetting = getSetting.Invoke(category, new object[] { "DebugLog" });
                 doubleTapSetting = getSetting.Invoke(category, new object[] { "DoubleTap" });
                 doubleTapWindowSetting = getSetting.Invoke(category, new object[] { "DoubleTapWindow" });
-                currentValueProp = tValue.GetProperty("CurrentValue");
+                currentValueProp = tValue != null ? tValue.GetProperty("CurrentValue") : null;
 
                 connected = true;
                 Log.Out(SevenDashesMod.LogPrefix + "Gears settings connected.");

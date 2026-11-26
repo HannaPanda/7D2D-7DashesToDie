@@ -1,27 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ModSettings>
+<ModSettings version="2">
   <Global>
     <Tab name="SevenDashes" displayKey="uiSevenDashesTab" tooltipKey="tipSevenDashesTab">
-      <Category name="Dash" displayKey="uiSevenDashesCategory" tooltipKey="tipSevenDashesCategory">
-        <Switch name="Enabled" displayKey="uiSevenDashesEnabled" tooltipKey="tipSevenDashesEnabled" defaultValue="True" leftValue="False" rightValue="True" />
-        <Switch name="RequirePerk" displayKey="uiSevenDashesRequirePerk" tooltipKey="tipSevenDashesRequirePerk" defaultValue="True" leftValue="False" rightValue="True" />
-        <Slider name="Force" displayKey="uiSevenDashesForce" tooltipKey="tipSevenDashesForce" defaultValue="100">
-          <Property increment="5" minValue="25" maxValue="300" type="incrementalValuesInt" />
+      <Category name="Dash" displayKey="uiSevenDashesCategory">
+        <Description key="tipSevenDashesCategory" />
+        <Switch name="Enabled" displayKey="uiSevenDashesEnabled" type="bool" defaultValue="True">
+          <Description key="tipSevenDashesEnabled" />
+        </Switch>
+        <Switch name="RequirePerk" displayKey="uiSevenDashesRequirePerk" type="bool" defaultValue="True">
+          <Description key="tipSevenDashesRequirePerk" />
+        </Switch>
+        <Slider name="Force" displayKey="uiSevenDashesForce" type="int" defaultValue="100">
+          <Description key="tipSevenDashesForce" />
+          <Incremental increment="5" minValue="25" maxValue="300" />
         </Slider>
-        <Slider name="Cooldown" displayKey="uiSevenDashesCooldown" tooltipKey="tipSevenDashesCooldown" defaultValue="1.5">
-          <Property increment="0.1" minValue="0.2" maxValue="10" type="incrementalValuesFloat" />
+        <Slider name="Cooldown" displayKey="uiSevenDashesCooldown" type="float" defaultValue="1.5">
+          <Description key="tipSevenDashesCooldown" />
+          <Incremental increment="0.1" minValue="0.2" maxValue="10" />
+          <Formatter ui="0.0" serialize="0.0" />
         </Slider>
-        <Slider name="StaminaCost" displayKey="uiSevenDashesStamina" tooltipKey="tipSevenDashesStamina" defaultValue="10">
-          <Property increment="1" minValue="0" maxValue="50" type="incrementalValuesInt" />
+        <Slider name="StaminaCost" displayKey="uiSevenDashesStamina" type="int" defaultValue="10">
+          <Description key="tipSevenDashesStamina" />
+          <Incremental increment="1" minValue="0" maxValue="50" />
         </Slider>
-        <Slider name="Volume" displayKey="uiSevenDashesVolume" tooltipKey="tipSevenDashesVolume" defaultValue="100">
-          <Property increment="5" minValue="0" maxValue="100" type="incrementalValuesInt" />
+        <Slider name="Volume" displayKey="uiSevenDashesVolume" type="int" defaultValue="100">
+          <Description key="tipSevenDashesVolume" />
+          <Incremental increment="5" minValue="0" maxValue="100" />
         </Slider>
-        <Switch name="DoubleTap" displayKey="uiSevenDashesDoubleTap" tooltipKey="tipSevenDashesDoubleTap" defaultValue="False" leftValue="False" rightValue="True" />
-        <Slider name="DoubleTapWindow" displayKey="uiSevenDashesDoubleTapWindow" tooltipKey="tipSevenDashesDoubleTapWindow" defaultValue="300">
-          <Property increment="10" minValue="150" maxValue="600" type="incrementalValuesInt" />
+        <Switch name="DoubleTap" displayKey="uiSevenDashesDoubleTap" type="bool" defaultValue="False">
+          <Description key="tipSevenDashesDoubleTap" />
+        </Switch>
+        <Slider name="DoubleTapWindow" displayKey="uiSevenDashesDoubleTapWindow" type="int" defaultValue="300">
+          <Description key="tipSevenDashesDoubleTapWindow" />
+          <Incremental increment="10" minValue="150" maxValue="600" />
         </Slider>
-        <Switch name="DebugLog" displayKey="uiSevenDashesDebug" tooltipKey="tipSevenDashesDebug" defaultValue="False" leftValue="False" rightValue="True" />
+        <Switch name="DebugLog" displayKey="uiSevenDashesDebug" type="bool" defaultValue="False">
+          <Description key="tipSevenDashesDebug" />
+        </Switch>
       </Category>
     </Tab>
   </Global>
