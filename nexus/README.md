@@ -1,8 +1,9 @@
 # Nexus mod page assets
 
-`description.bbcode` is the source of truth for the Nexus Mods description. Edit it here,
-then paste it into the mod page's description field. The rich-text editor converts the
-BBCode correctly on paste, so no mode switch is needed.
+`description.bbcode` is the source of truth for the Nexus Mods description. Edit it here;
+every release tag uploads it to the mod page (see "Nexus" in `docs/build-and-release.md`).
+For an update between releases, paste it into the mod page's description field - the
+rich-text editor converts the BBCode correctly on paste, so no mode switch is needed.
 
 ## Summary field (max 350 characters)
 

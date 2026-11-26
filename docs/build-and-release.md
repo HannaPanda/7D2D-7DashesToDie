@@ -166,3 +166,13 @@ The Nexus upload step is skipped until the repo variable `NEXUSMODS_FILE_ID` is 
 The v3 Upload API can only add a version to a file entry that already exists, so the mod page
 and the first file have to be created by hand on the website once. Setting or clearing the
 variable is the on/off switch for auto-publish.
+
+On every tag the workflow also:
+
+- appends this version's `CHANGELOG.md` bullets to the mod page's **Changelogs** tab, one
+  entry per bullet. Those bullets are what players read there, so write them for players.
+  The endpoint only appends: re-running a tag posts the same lines again.
+- replaces the mod page **description** with `nexus/description.bbcode` (v3 `editMod`, by
+  the mod UID in `NEXUS_MOD_UID`). The repo file is the only place the page is edited -
+  including its hand-written changelog section, which needs the new version on every
+  release.
